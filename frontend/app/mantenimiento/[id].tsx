@@ -17,6 +17,7 @@ import { Mantenimiento } from "../../types/mantenimiento";
 import { Repuesto } from "../../types/repuesto";
 import { api } from "../../services/api";
 import EditMantenimientoModal from "../../components/EditMantenimientoModal";
+import LinkedItemCard from "../../components/LinkedItemCard";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -328,95 +329,28 @@ export default function MantenimientoDetailScreen() {
             </Text>
             {repuestos.length > 0 ? (
               <View style={{ gap: 8 }}>
-                {repuestos.map((rep) => (
-                  <Pressable
-                    key={rep.id}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/repuesto/[id]",
-                        params: { id: rep.id, data: JSON.stringify(rep) },
-                      })
-                    }
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      backgroundColor: "#141414",
-                      borderWidth: 1,
-                      borderColor: "#2A2A2A",
-                      borderRadius: 12,
-                      padding: 12,
-                      gap: 12,
-                    }}
-                  >
-                    {rep.imagen_url ? (
-                      <Image
-                        source={{ uri: rep.imagen_url }}
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 10,
-                          backgroundColor: "#1E1E1E",
-                        }}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <View
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 10,
-                          backgroundColor: "#1E1E1E",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Feather name="package" size={18} color="#333" />
-                      </View>
-                    )}
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        numberOfLines={1}
-                        style={{
-                          color: "#F0F0F0",
-                          fontSize: 14,
-                          fontFamily: "Inter_500Medium",
-                        }}
-                      >
-                        {rep.nombre}
-                      </Text>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 10,
-                          marginTop: 3,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            color: "#666",
-                            fontSize: 11,
-                            fontFamily: "Inter_400Regular",
-                          }}
-                        >
-                          Cant: {rep.cantidad_disponible}
-                        </Text>
-                        {rep.costo_unitario > 0 && (
-                          <Text
-                            style={{
-                              color: "#666",
-                              fontSize: 11,
-                              fontFamily: "Inter_400Regular",
-                            }}
-                          >
-                            ${rep.costo_unitario.toLocaleString()}
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-                    <Feather name="chevron-right" size={16} color="#444" />
-                  </Pressable>
-                ))}
+                {repuestos.map((rep) => {
+                  const metaParts = [
+                    `Cant: ${rep.cantidad_disponible}`,
+                    rep.costo_unitario > 0 ? `$${rep.costo_unitario.toLocaleString()}` : "",
+                  ].filter(Boolean);
+                  return (
+                    <LinkedItemCard
+                      key={rep.id}
+                      imageUrl={rep.imagen_url}
+                      fallbackIcon="package"
+                      title={rep.nombre}
+                      subtitle={rep.proveedor || undefined}
+                      meta={metaParts.join(" · ")}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/repuesto/[id]",
+                          params: { id: rep.id, data: JSON.stringify(rep) },
+                        })
+                      }
+                    />
+                  );
+                })}
               </View>
             ) : (
               <View

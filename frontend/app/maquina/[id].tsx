@@ -17,6 +17,7 @@ import { Maquina } from "../../types/maquina";
 import { Mantenimiento } from "../../types/mantenimiento";
 import { api } from "../../services/api";
 import EditMaquinaModal from "../../components/EditMaquinaModal";
+import LinkedItemCard from "../../components/LinkedItemCard";
 
 const tipoConfig: Record<string, { color: string; bg: string; icon: string; label: string }> = {
   preventivo: { color: "#3B82F6", bg: "rgba(59,130,246,0.12)", icon: "shield", label: "Preventivo" },
@@ -403,110 +404,35 @@ export default function MaquinaDetailScreen() {
                 </Text>
               </View>
             ) : (
-              <View style={{ gap: 10 }}>
+              <View style={{ gap: 8 }}>
                 {mantenimientos.map((m) => {
                   const tc = tipoConfig[m.tipo] || tipoConfig.preventivo;
+                  const foto = m.fotos_urls?.[0] || null;
+                  const fechaStr = new Date(m.fecha_realizacion).toLocaleDateString("es-CO", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  });
+                  const metaParts = [m.tecnico_responsable, m.costo_total > 0 ? `$${m.costo_total.toLocaleString()}` : ""].filter(Boolean);
                   return (
-                    <Pressable
+                    <LinkedItemCard
                       key={m.id}
+                      imageUrl={foto}
+                      fallbackIcon="tool"
+                      title={m.descripcion}
+                      subtitle={fechaStr}
+                      meta={metaParts.join(" · ")}
+                      badgeLabel={tc.label}
+                      badgeColor={tc.color}
+                      badgeBg={tc.bg}
+                      badgeIcon={tc.icon as any}
                       onPress={() =>
                         router.push({
                           pathname: "/mantenimiento/[id]",
                           params: { id: m.id, data: JSON.stringify(m) },
                         })
                       }
-                    >
-                    <View
-                      style={{
-                        backgroundColor: "#141414",
-                        borderWidth: 1,
-                        borderColor: "#222",
-                        borderRadius: 14,
-                        padding: 14,
-                      }}
-                    >
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          marginBottom: 8,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            color: "#888",
-                            fontSize: 12,
-                            fontFamily: "Inter_500Medium",
-                          }}
-                        >
-                          {new Date(m.fecha_realizacion).toLocaleDateString(
-                            "es-CO",
-                            { year: "numeric", month: "short", day: "numeric" }
-                          )}
-                        </Text>
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            backgroundColor: tc.bg,
-                            paddingHorizontal: 8,
-                            paddingVertical: 3,
-                            borderRadius: 8,
-                            gap: 4,
-                          }}
-                        >
-                          <Feather name={tc.icon as any} size={10} color={tc.color} />
-                          <Text
-                            style={{
-                              color: tc.color,
-                              fontSize: 10,
-                              fontFamily: "Inter_600SemiBold",
-                            }}
-                          >
-                            {tc.label}
-                          </Text>
-                        </View>
-                      </View>
-                      <Text
-                        numberOfLines={2}
-                        style={{
-                          color: "#D0D0D0",
-                          fontSize: 13,
-                          fontFamily: "Inter_400Regular",
-                          lineHeight: 18,
-                          marginBottom: 6,
-                        }}
-                      >
-                        {m.descripcion}
-                      </Text>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                          <Feather name="user" size={11} color="#555" />
-                          <Text style={{ color: "#777", fontSize: 11, fontFamily: "Inter_400Regular" }}>
-                            {m.tecnico_responsable}
-                          </Text>
-                        </View>
-                        {m.costo_total > 0 && (
-                          <Text
-                            style={{
-                              color: "#4ADE80",
-                              fontSize: 12,
-                              fontFamily: "Inter_600SemiBold",
-                            }}
-                          >
-                            ${m.costo_total.toLocaleString()}
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-                    </Pressable>
+                    />
                   );
                 })}
               </View>

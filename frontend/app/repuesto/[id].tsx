@@ -17,6 +17,7 @@ import { Repuesto } from "../../types/repuesto";
 import { Mantenimiento } from "../../types/mantenimiento";
 import { api } from "../../services/api";
 import EditRepuestoModal from "../../components/EditRepuestoModal";
+import LinkedItemCard from "../../components/LinkedItemCard";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -317,7 +318,11 @@ export default function RepuestoDetailScreen() {
           {/* Mantenimiento Asociado */}
           <View style={{ marginTop: 8, marginBottom: 20 }}>
             <Text style={sectionLabel}>Mantenimiento Asociado</Text>
-            <Pressable
+            <LinkedItemCard
+              imageUrl={mantenimiento?.fotos_urls?.[0] || null}
+              fallbackIcon="tool"
+              title={machineName}
+              subtitle={mantenimiento?.descripcion || repuesto.mantenimientos?.descripcion}
               onPress={() => {
                 if (mantenimiento) {
                   router.push({
@@ -326,56 +331,7 @@ export default function RepuestoDetailScreen() {
                   });
                 }
               }}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: "#141414",
-                borderWidth: 1,
-                borderColor: "#2A2A2A",
-                borderRadius: 12,
-                padding: 12,
-                gap: 12,
-              }}
-            >
-              <View
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 10,
-                  backgroundColor: "#1E1E1E",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Feather name="tool" size={18} color="#3B82F6" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    color: "#F0F0F0",
-                    fontSize: 14,
-                    fontFamily: "Inter_500Medium",
-                  }}
-                >
-                  {machineName}
-                </Text>
-                {(mantenimiento?.descripcion || repuesto.mantenimientos?.descripcion) ? (
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      color: "#666",
-                      fontSize: 12,
-                      fontFamily: "Inter_400Regular",
-                      marginTop: 3,
-                    }}
-                  >
-                    {mantenimiento?.descripcion || repuesto.mantenimientos?.descripcion}
-                  </Text>
-                ) : null}
-              </View>
-              <Feather name="chevron-right" size={16} color="#444" />
-            </Pressable>
+            />
           </View>
 
           {/* Edit button */}

@@ -8,7 +8,8 @@ const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.post('/', upload.single('image'), async (req, res) => {
-  console.log('[UPLOAD] Request received');
+  const bucket = req.query.bucket || 'maquinas';
+  console.log('[UPLOAD] Request received, bucket:', bucket);
   console.log('[UPLOAD] File:', req.file ? { name: req.file.originalname, size: req.file.size, mime: req.file.mimetype } : 'NO FILE');
   
   if (!req.file) return res.status(400).json({ error: 'No image provided' });
@@ -19,7 +20,7 @@ router.post('/', upload.single('image'), async (req, res) => {
   console.log('[UPLOAD] Uploading to Supabase:', fileName);
 
   const { error } = await supabase.storage
-    .from('maquinas')
+    .from(bucket)
     .upload(fileName, req.file.buffer, {
       contentType: req.file.mimetype,
     });
@@ -29,7 +30,7 @@ router.post('/', upload.single('image'), async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 
-  const { data } = supabase.storage.from('maquinas').getPublicUrl(fileName);
+  const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
   console.log('[UPLOAD] Success, URL:', data.publicUrl);
 
   res.json({ url: data.publicUrl });

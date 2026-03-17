@@ -26,6 +26,7 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="maquina/[id]" />
+        <Stack.Screen name="mantenimiento/[id]" />
       </Stack>
     </>
   );

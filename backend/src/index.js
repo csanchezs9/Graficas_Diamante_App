@@ -1,0 +1,22 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const healthRoutes = require('./routes/health');
+const maquinasRoutes = require('./routes/maquinas');
+const uploadRoutes = require('./routes/upload');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middlewares
+app.use(cors());
+app.use(express.json());
+
+// Routes
+app.use('/api/health', healthRoutes);
+app.use('/api/maquinas', maquinasRoutes);
+app.use('/api/upload', uploadRoutes);
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

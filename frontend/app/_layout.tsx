@@ -27,6 +27,7 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="maquina/[id]" />
         <Stack.Screen name="mantenimiento/[id]" />
+        <Stack.Screen name="repuesto/[id]" />
       </Stack>
     </>
   );

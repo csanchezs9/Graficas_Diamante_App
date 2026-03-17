@@ -4,26 +4,26 @@ const getById = async (req, res) => {
   const { id } = req.params;
 
   const { data, error } = await supabase
-    .from('mantenimientos')
-    .select('*, maquinas(nombre)')
+    .from('repuestos')
+    .select('*, mantenimientos(descripcion, maquina_id, maquinas(nombre))')
     .eq('id', id)
     .single();
 
   if (error) return res.status(500).json({ error: error.message });
-  if (!data) return res.status(404).json({ error: 'Mantenimiento no encontrado' });
+  if (!data) return res.status(404).json({ error: 'Repuesto no encontrado' });
   res.json(data);
 };
 
 const getAll = async (req, res) => {
-  const { maquina_id } = req.query;
+  const { mantenimiento_id } = req.query;
 
   let query = supabase
-    .from('mantenimientos')
-    .select('*, maquinas(nombre)')
-    .order('fecha_realizacion', { ascending: false });
+    .from('repuestos')
+    .select('*, mantenimientos(descripcion, maquina_id, maquinas(nombre))')
+    .order('created_at', { ascending: false });
 
-  if (maquina_id) {
-    query = query.eq('maquina_id', maquina_id);
+  if (mantenimiento_id) {
+    query = query.eq('mantenimiento_id', mantenimiento_id);
   }
 
   const { data, error } = await query;
@@ -34,27 +34,29 @@ const getAll = async (req, res) => {
 
 const create = async (req, res) => {
   const {
-    maquina_id,
-    fecha_realizacion,
-    tecnico_responsable,
-    descripcion,
-    fotos_urls,
-    costo_total,
+    mantenimiento_id,
+    nombre,
     tipo,
+    cantidad_disponible,
+    costo_unitario,
+    proveedor,
+    fecha,
+    imagen_url,
   } = req.body;
 
   const { data, error } = await supabase
-    .from('mantenimientos')
+    .from('repuestos')
     .insert({
-      maquina_id,
-      fecha_realizacion,
-      tecnico_responsable,
-      descripcion,
-      fotos_urls: fotos_urls || [],
-      costo_total,
+      mantenimiento_id,
+      nombre,
       tipo,
+      cantidad_disponible: cantidad_disponible || 0,
+      costo_unitario: costo_unitario || 0,
+      proveedor,
+      fecha,
+      imagen_url,
     })
-    .select('*, maquinas(nombre)')
+    .select('*, mantenimientos(descripcion, maquina_id, maquinas(nombre))')
     .single();
 
   if (error) return res.status(500).json({ error: error.message });
@@ -65,12 +67,12 @@ const remove = async (req, res) => {
   const { id } = req.params;
 
   const { error } = await supabase
-    .from('mantenimientos')
+    .from('repuestos')
     .delete()
     .eq('id', id);
 
   if (error) return res.status(500).json({ error: error.message });
-  res.json({ message: 'Mantenimiento eliminado' });
+  res.json({ message: 'Repuesto eliminado' });
 };
 
 const update = async (req, res) => {
@@ -78,10 +80,10 @@ const update = async (req, res) => {
   const fields = req.body;
 
   const { data, error } = await supabase
-    .from('mantenimientos')
+    .from('repuestos')
     .update(fields)
     .eq('id', id)
-    .select('*, maquinas(nombre)')
+    .select('*, mantenimientos(descripcion, maquina_id, maquinas(nombre))')
     .single();
 
   if (error) return res.status(500).json({ error: error.message });

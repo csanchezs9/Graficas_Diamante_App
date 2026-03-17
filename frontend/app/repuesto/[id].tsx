@@ -13,23 +13,23 @@ import {
   Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { Mantenimiento } from "../../types/mantenimiento";
 import { Repuesto } from "../../types/repuesto";
+import { Mantenimiento } from "../../types/mantenimiento";
 import { api } from "../../services/api";
-import EditMantenimientoModal from "../../components/EditMantenimientoModal";
+import EditRepuestoModal from "../../components/EditRepuestoModal";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const tipoConfig: Record<string, { color: string; bg: string; icon: string; label: string }> = {
-  preventivo: { color: "#3B82F6", bg: "rgba(59,130,246,0.12)", icon: "shield", label: "Preventivo" },
-  correctivo: { color: "#F59E0B", bg: "rgba(245,158,11,0.12)", icon: "tool", label: "Correctivo" },
+  mecanico: { color: "#3B82F6", bg: "rgba(59,130,246,0.12)", icon: "settings", label: "Mecánico" },
+  consumible: { color: "#F59E0B", bg: "rgba(245,158,11,0.12)", icon: "box", label: "Consumible" },
 };
 
-export default function MantenimientoDetailScreen() {
+export default function RepuestoDetailScreen() {
   const { id, data } = useLocalSearchParams<{ id: string; data?: string }>();
   const router = useRouter();
+  const [repuesto, setRepuesto] = useState<Repuesto | null>(null);
   const [mantenimiento, setMantenimiento] = useState<Mantenimiento | null>(null);
-  const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -39,20 +39,26 @@ export default function MantenimientoDetailScreen() {
       if (!id) return;
 
       const fetchData = async () => {
-        // Fetch mantenimiento and repuestos independently so one failure doesn't block the other
+        let rep: Repuesto | null = null;
+
         try {
-          const mant = await api.getMantenimiento(id);
-          setMantenimiento(mant);
+          rep = await api.getRepuesto(id);
+          setRepuesto(rep);
         } catch {
           if (data) {
-            try { setMantenimiento(JSON.parse(data)); } catch {}
+            try {
+              rep = JSON.parse(data);
+              setRepuesto(rep);
+            } catch {}
           }
         }
 
-        try {
-          const reps = await api.getRepuestos(id);
-          setRepuestos(reps);
-        } catch {}
+        if (rep?.mantenimiento_id) {
+          try {
+            const mant = await api.getMantenimiento(rep.mantenimiento_id);
+            setMantenimiento(mant);
+          } catch {}
+        }
 
         setLoading(false);
       };
@@ -62,15 +68,15 @@ export default function MantenimientoDetailScreen() {
   );
 
   const handleDelete = () => {
-    if (!mantenimiento) return;
-    Alert.alert("Eliminar", "¿Eliminar este mantenimiento?", [
+    if (!repuesto) return;
+    Alert.alert("Eliminar", "¿Eliminar este repuesto?", [
       { text: "Cancelar", style: "cancel" },
       {
         text: "Eliminar",
         style: "destructive",
         onPress: async () => {
           try {
-            await api.deleteMantenimiento(mantenimiento.id);
+            await api.deleteRepuesto(repuesto.id);
             router.back();
           } catch {
             Alert.alert("Error", "No se pudo eliminar");
@@ -81,15 +87,16 @@ export default function MantenimientoDetailScreen() {
   };
 
   const handleEdit = async (editData: {
-    fecha_realizacion: string;
-    tecnico_responsable: string;
-    descripcion: string;
-    costo_total: number;
+    nombre: string;
     tipo: string;
+    cantidad_disponible: number;
+    costo_unitario: number;
+    proveedor: string;
+    fecha: string;
   }) => {
-    if (!mantenimiento) return;
-    const updated = await api.updateMantenimiento(mantenimiento.id, editData);
-    setMantenimiento(updated);
+    if (!repuesto) return;
+    const updated = await api.updateRepuesto(repuesto.id, editData);
+    setRepuesto(updated);
   };
 
   if (loading) {
@@ -101,19 +108,19 @@ export default function MantenimientoDetailScreen() {
     );
   }
 
-  if (!mantenimiento) {
+  if (!repuesto) {
     return (
       <View style={{ flex: 1, backgroundColor: "#0A0A0A", alignItems: "center", justifyContent: "center" }}>
         <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
         <Text style={{ color: "#A0A0A0", fontSize: 16, fontFamily: "Inter_500Medium" }}>
-          Mantenimiento no encontrado
+          Repuesto no encontrado
         </Text>
       </View>
     );
   }
 
-  const tc = tipoConfig[mantenimiento.tipo] || tipoConfig.preventivo;
-  const machineName = mantenimiento.maquinas?.nombre || "—";
+  const tc = tipoConfig[repuesto.tipo] || tipoConfig.mecanico;
+  const machineName = repuesto.mantenimientos?.maquinas?.nombre || "—";
 
   return (
     <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
@@ -156,7 +163,7 @@ export default function MantenimientoDetailScreen() {
           }}
           numberOfLines={1}
         >
-          Mantenimiento
+          Repuesto
         </Text>
         <Pressable
           onPress={() => setEditModalVisible(true)}
@@ -178,8 +185,42 @@ export default function MantenimientoDetailScreen() {
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
+        {/* Image */}
+        {repuesto.imagen_url && (
+          <Pressable onPress={() => setPreviewImage(repuesto.imagen_url)}>
+            <Image
+              source={{ uri: repuesto.imagen_url }}
+              style={{
+                width: "100%",
+                height: 220,
+                backgroundColor: "#141414",
+              }}
+              resizeMode="cover"
+            />
+            <View
+              style={{
+                position: "absolute",
+                bottom: 12,
+                right: 12,
+                backgroundColor: "rgba(0,0,0,0.6)",
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                borderRadius: 10,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              <Feather name="maximize-2" size={12} color="#FFF" />
+              <Text style={{ color: "#FFF", fontSize: 11, fontFamily: "Inter_500Medium" }}>
+                Ver
+              </Text>
+            </View>
+          </Pressable>
+        )}
+
         <View style={{ padding: 20 }}>
-          {/* Machine name + type badge */}
+          {/* Name + type badge */}
           <View
             style={{
               flexDirection: "row",
@@ -198,7 +239,7 @@ export default function MantenimientoDetailScreen() {
               }}
               numberOfLines={2}
             >
-              {machineName}
+              {repuesto.nombre}
             </Text>
             <View
               style={{
@@ -224,44 +265,37 @@ export default function MantenimientoDetailScreen() {
             </View>
           </View>
 
-          {/* Descripción */}
-          <View style={{ marginBottom: 20 }}>
-            <Text style={sectionLabel}>Descripción</Text>
-            <Text
-              style={{
-                color: "#D0D0D0",
-                fontSize: 15,
-                fontFamily: "Inter_400Regular",
-                lineHeight: 22,
-              }}
-            >
-              {mantenimiento.descripcion}
-            </Text>
-          </View>
-
           {/* Info rows */}
           <View style={{ gap: 10, marginBottom: 20 }}>
             <InfoRow
-              icon="user"
-              label="Técnico Responsable"
-              value={mantenimiento.tecnico_responsable}
-            />
-            <InfoRow
-              icon="calendar"
-              label="Fecha de Realización"
-              value={
-                new Date(mantenimiento.fecha_realizacion).toLocaleDateString(
-                  "es-CO",
-                  { year: "numeric", month: "long", day: "numeric" }
-                )
-              }
+              icon="layers"
+              label="Cantidad Disponible"
+              value={String(repuesto.cantidad_disponible)}
             />
             <InfoRow
               icon="dollar-sign"
-              label="Costo Total"
+              label="Costo Unitario"
               value={
-                mantenimiento.costo_total > 0
-                  ? `$${mantenimiento.costo_total.toLocaleString()}`
+                repuesto.costo_unitario > 0
+                  ? `$${repuesto.costo_unitario.toLocaleString()}`
+                  : null
+              }
+            />
+            <InfoRow
+              icon="truck"
+              label="Proveedor"
+              value={repuesto.proveedor || null}
+            />
+            <InfoRow
+              icon="calendar"
+              label="Fecha"
+              value={
+                repuesto.fecha
+                  ? new Date(repuesto.fecha).toLocaleDateString("es-CO", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
                   : null
               }
             />
@@ -269,179 +303,79 @@ export default function MantenimientoDetailScreen() {
               icon="clock"
               label="Registrado"
               value={
-                mantenimiento.created_at
-                  ? new Date(mantenimiento.created_at).toLocaleDateString(
-                      "es-CO",
-                      { year: "numeric", month: "long", day: "numeric" }
-                    )
+                repuesto.created_at
+                  ? new Date(repuesto.created_at).toLocaleDateString("es-CO", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
                   : null
               }
             />
           </View>
 
-          {/* Fotos del trabajo */}
-          {mantenimiento.fotos_urls && mantenimiento.fotos_urls.length > 0 && (
-            <View style={{ marginBottom: 20 }}>
-              <Text style={sectionLabel}>
-                Fotos del Trabajo ({mantenimiento.fotos_urls.length})
-              </Text>
-              <View style={{ flexDirection: "row", gap: 10 }}>
-                {mantenimiento.fotos_urls.map((url, i) => (
-                  <Pressable
-                    key={i}
-                    onPress={() => setPreviewImage(url)}
-                    style={{
-                      flex: 1,
-                      height: 120,
-                      borderRadius: 12,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <Image
-                      source={{ uri: url }}
-                      style={{ width: "100%", height: 120 }}
-                      resizeMode="cover"
-                    />
-                    <View
-                      style={{
-                        position: "absolute",
-                        bottom: 6,
-                        right: 6,
-                        backgroundColor: "rgba(0,0,0,0.6)",
-                        paddingHorizontal: 6,
-                        paddingVertical: 3,
-                        borderRadius: 8,
-                      }}
-                    >
-                      <Feather name="maximize-2" size={10} color="#FFF" />
-                    </View>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {/* Repuestos utilizados */}
-          <View style={{ marginBottom: 20 }}>
-            <Text style={sectionLabel}>
-              Repuestos Utilizados ({repuestos.length})
-            </Text>
-            {repuestos.length > 0 ? (
-              <View style={{ gap: 8 }}>
-                {repuestos.map((rep) => (
-                  <Pressable
-                    key={rep.id}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/repuesto/[id]",
-                        params: { id: rep.id, data: JSON.stringify(rep) },
-                      })
-                    }
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      backgroundColor: "#141414",
-                      borderWidth: 1,
-                      borderColor: "#2A2A2A",
-                      borderRadius: 12,
-                      padding: 12,
-                      gap: 12,
-                    }}
-                  >
-                    {rep.imagen_url ? (
-                      <Image
-                        source={{ uri: rep.imagen_url }}
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 10,
-                          backgroundColor: "#1E1E1E",
-                        }}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <View
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 10,
-                          backgroundColor: "#1E1E1E",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Feather name="package" size={18} color="#333" />
-                      </View>
-                    )}
-                    <View style={{ flex: 1 }}>
-                      <Text
-                        numberOfLines={1}
-                        style={{
-                          color: "#F0F0F0",
-                          fontSize: 14,
-                          fontFamily: "Inter_500Medium",
-                        }}
-                      >
-                        {rep.nombre}
-                      </Text>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 10,
-                          marginTop: 3,
-                        }}
-                      >
-                        <Text
-                          style={{
-                            color: "#666",
-                            fontSize: 11,
-                            fontFamily: "Inter_400Regular",
-                          }}
-                        >
-                          Cant: {rep.cantidad_disponible}
-                        </Text>
-                        {rep.costo_unitario > 0 && (
-                          <Text
-                            style={{
-                              color: "#666",
-                              fontSize: 11,
-                              fontFamily: "Inter_400Regular",
-                            }}
-                          >
-                            ${rep.costo_unitario.toLocaleString()}
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-                    <Feather name="chevron-right" size={16} color="#444" />
-                  </Pressable>
-                ))}
-              </View>
-            ) : (
+          {/* Mantenimiento Asociado */}
+          <View style={{ marginTop: 8, marginBottom: 20 }}>
+            <Text style={sectionLabel}>Mantenimiento Asociado</Text>
+            <Pressable
+              onPress={() => {
+                if (mantenimiento) {
+                  router.push({
+                    pathname: "/mantenimiento/[id]",
+                    params: { id: mantenimiento.id, data: JSON.stringify(mantenimiento) },
+                  });
+                }
+              }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: "#141414",
+                borderWidth: 1,
+                borderColor: "#2A2A2A",
+                borderRadius: 12,
+                padding: 12,
+                gap: 12,
+              }}
+            >
               <View
                 style={{
-                  backgroundColor: "#141414",
-                  borderWidth: 1,
-                  borderColor: "#2A2A2A",
-                  borderRadius: 12,
-                  paddingVertical: 20,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 10,
+                  backgroundColor: "#1E1E1E",
                   alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
-                <Feather name="package" size={20} color="#333" />
+                <Feather name="tool" size={18} color="#3B82F6" />
+              </View>
+              <View style={{ flex: 1 }}>
                 <Text
+                  numberOfLines={1}
                   style={{
-                    color: "#555",
-                    fontSize: 13,
-                    fontFamily: "Inter_400Regular",
-                    marginTop: 6,
+                    color: "#F0F0F0",
+                    fontSize: 14,
+                    fontFamily: "Inter_500Medium",
                   }}
                 >
-                  Sin repuestos registrados
+                  {machineName}
                 </Text>
+                {(mantenimiento?.descripcion || repuesto.mantenimientos?.descripcion) ? (
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      color: "#666",
+                      fontSize: 12,
+                      fontFamily: "Inter_400Regular",
+                      marginTop: 3,
+                    }}
+                  >
+                    {mantenimiento?.descripcion || repuesto.mantenimientos?.descripcion}
+                  </Text>
+                ) : null}
               </View>
-            )}
+              <Feather name="chevron-right" size={16} color="#444" />
+            </Pressable>
           </View>
 
           {/* Edit button */}
@@ -457,7 +391,6 @@ export default function MantenimientoDetailScreen() {
               borderColor: "rgba(59,130,246,0.2)",
               paddingVertical: 14,
               borderRadius: 14,
-              marginTop: 12,
             }}
           >
             <Feather name="edit-2" size={16} color="#3B82F6" />
@@ -468,7 +401,7 @@ export default function MantenimientoDetailScreen() {
                 fontFamily: "Inter_500Medium",
               }}
             >
-              Editar Mantenimiento
+              Editar Repuesto
             </Text>
           </Pressable>
 
@@ -496,7 +429,7 @@ export default function MantenimientoDetailScreen() {
                 fontFamily: "Inter_500Medium",
               }}
             >
-              Eliminar Mantenimiento
+              Eliminar Repuesto
             </Text>
           </Pressable>
         </View>
@@ -548,10 +481,10 @@ export default function MantenimientoDetailScreen() {
         </Modal>
       )}
 
-      {mantenimiento && (
-        <EditMantenimientoModal
+      {repuesto && (
+        <EditRepuestoModal
           visible={editModalVisible}
-          mantenimiento={mantenimiento}
+          repuesto={repuesto}
           onClose={() => setEditModalVisible(false)}
           onSubmit={handleEdit}
         />

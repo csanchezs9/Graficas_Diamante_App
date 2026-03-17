@@ -1,5 +1,19 @@
 const supabase = require('../config/supabase');
 
+const getById = async (req, res) => {
+  const { id } = req.params;
+
+  const { data, error } = await supabase
+    .from('maquinas')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) return res.status(500).json({ error: error.message });
+  if (!data) return res.status(404).json({ error: 'Máquina no encontrada' });
+  res.json(data);
+};
+
 const getAll = async (req, res) => {
   const { data, error } = await supabase
     .from('maquinas')
@@ -50,4 +64,4 @@ const update = async (req, res) => {
   res.json(data);
 };
 
-module.exports = { getAll, create, remove, update };
+module.exports = { getAll, getById, create, remove, update };

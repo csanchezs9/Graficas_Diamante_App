@@ -279,8 +279,9 @@ export default function MantenimientosScreen() {
               }}
             >
               {new Date(item.fecha_realizacion).toLocaleDateString("es-CO", {
-                month: "short",
                 day: "numeric",
+                month: "long",
+                year: "numeric",
               })}
             </Text>
           </View>

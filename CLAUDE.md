@@ -17,16 +17,25 @@
 - **Todo custom** — la app debe verse profesional, no genérica.
 
 ## Modules (Bottom Tab Navigation)
-1. **Máquinas** — CRUD (listar, crear, eliminar). Campos: nombre, descripcion, codigo, ubicacion, imagen_url, estado, fecha_ultima_inspeccion
-2. **Mantenimientos** — (por implementar)
-3. **Repuestos** — (por implementar)
+1. **Máquinas** — CRUD completo. Campos: nombre, descripcion, codigo, ubicacion, imagen_url, estado, fecha_ultima_inspeccion
+2. **Mantenimientos** — CRUD completo. Campos: maquina_id (FK), fecha_realizacion, tecnico_responsable, descripcion, fotos_urls, costo_total, tipo. Asociado a máquinas.
+3. **Repuestos** — CRUD completo. Campos: mantenimiento_id (FK), nombre, tipo, cantidad_disponible, costo_unitario, proveedor, fecha, imagen_url (1 imagen). Asociado a mantenimientos.
 4. **Métricas** — (por implementar)
 
 ## Backend API Endpoints
 - `GET /api/maquinas` — listar todas las máquinas
 - `POST /api/maquinas` — crear máquina
+- `PUT /api/maquinas/:id` — actualizar máquina
 - `DELETE /api/maquinas/:id` — eliminar máquina
-- `POST /api/upload` — subir imagen (multipart/form-data, field: "image")
+- `GET /api/mantenimientos` — listar mantenimientos (query: ?maquina_id=)
+- `POST /api/mantenimientos` — crear mantenimiento
+- `PUT /api/mantenimientos/:id` — actualizar mantenimiento
+- `DELETE /api/mantenimientos/:id` — eliminar mantenimiento
+- `GET /api/repuestos` — listar repuestos (query: ?mantenimiento_id=)
+- `POST /api/repuestos` — crear repuesto
+- `PUT /api/repuestos/:id` — actualizar repuesto
+- `DELETE /api/repuestos/:id` — eliminar repuesto
+- `POST /api/upload` — subir imagen (multipart/form-data, field: "image", query: ?bucket=)
 - `GET /api/health` — health check
 
 ## Project Structure

@@ -1,5 +1,6 @@
 import { Maquina } from "../types/maquina";
 import { Mantenimiento } from "../types/mantenimiento";
+import { Repuesto } from "../types/repuesto";
 
 const API_URL = "http://192.168.1.2:3000/api";
 
@@ -8,6 +9,12 @@ export const api = {
   async getMaquinas(): Promise<Maquina[]> {
     const res = await fetch(`${API_URL}/maquinas`);
     if (!res.ok) throw new Error("Error al obtener máquinas");
+    return res.json();
+  },
+
+  async getMaquina(id: string): Promise<Maquina> {
+    const res = await fetch(`${API_URL}/maquinas/${id}`);
+    if (!res.ok) throw new Error("Error al obtener máquina");
     return res.json();
   },
 
@@ -69,6 +76,12 @@ export const api = {
     return res.json();
   },
 
+  async getMantenimiento(id: string): Promise<Mantenimiento> {
+    const res = await fetch(`${API_URL}/mantenimientos/${id}`);
+    if (!res.ok) throw new Error("Error al obtener mantenimiento");
+    return res.json();
+  },
+
   async createMantenimiento(data: Omit<Mantenimiento, "id" | "created_at" | "maquinas">): Promise<Mantenimiento> {
     const res = await fetch(`${API_URL}/mantenimientos`, {
       method: "POST",
@@ -93,6 +106,49 @@ export const api = {
       body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error("Error al actualizar mantenimiento");
+    return res.json();
+  },
+
+  // Repuestos
+  async getRepuestos(mantenimiento_id?: string): Promise<Repuesto[]> {
+    const url = mantenimiento_id
+      ? `${API_URL}/repuestos?mantenimiento_id=${mantenimiento_id}`
+      : `${API_URL}/repuestos`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Error al obtener repuestos");
+    return res.json();
+  },
+
+  async getRepuesto(id: string): Promise<Repuesto> {
+    const res = await fetch(`${API_URL}/repuestos/${id}`);
+    if (!res.ok) throw new Error("Error al obtener repuesto");
+    return res.json();
+  },
+
+  async createRepuesto(data: Omit<Repuesto, "id" | "created_at" | "mantenimientos">): Promise<Repuesto> {
+    const res = await fetch(`${API_URL}/repuestos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Error al crear repuesto");
+    return res.json();
+  },
+
+  async deleteRepuesto(id: string): Promise<void> {
+    const res = await fetch(`${API_URL}/repuestos/${id}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Error al eliminar repuesto");
+  },
+
+  async updateRepuesto(id: string, data: Partial<Repuesto>): Promise<Repuesto> {
+    const res = await fetch(`${API_URL}/repuestos/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Error al actualizar repuesto");
     return res.json();
   },
 };

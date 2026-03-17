@@ -1,5 +1,5 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState, useEffect, useCallback } from "react";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,6 @@ import {
   Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { useFocusEffect } from "expo-router";
 import { Maquina } from "../../types/maquina";
 import { Mantenimiento } from "../../types/mantenimiento";
 import { api } from "../../services/api";
@@ -40,22 +39,29 @@ export default function MaquinaDetailScreen() {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [mantenimientos, setMantenimientos] = useState<Mantenimiento[]>([]);
 
-  useEffect(() => {
-    if (data) {
-      try {
-        setMaquina(JSON.parse(data));
-      } catch {
-        // fallback
-      }
-    }
-    setLoading(false);
-  }, [data]);
-
   useFocusEffect(
     useCallback(() => {
-      if (id) {
-        api.getMantenimientos(id).then(setMantenimientos).catch(() => {});
-      }
+      if (!id) return;
+
+      const fetchData = async () => {
+        try {
+          const maq = await api.getMaquina(id);
+          setMaquina(maq);
+        } catch {
+          if (data) {
+            try { setMaquina(JSON.parse(data)); } catch {}
+          }
+        }
+
+        try {
+          const mants = await api.getMantenimientos(id);
+          setMantenimientos(mants);
+        } catch {}
+
+        setLoading(false);
+      };
+
+      fetchData();
     }, [id])
   );
 

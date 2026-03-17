@@ -35,4 +35,19 @@ const remove = async (req, res) => {
   res.json({ message: 'Máquina eliminada' });
 };
 
-module.exports = { getAll, create, remove };
+const update = async (req, res) => {
+  const { id } = req.params;
+  const { nombre, descripcion, codigo, ubicacion, imagen_url, estado, fecha_ultima_inspeccion } = req.body;
+
+  const { data, error } = await supabase
+    .from('maquinas')
+    .update({ nombre, descripcion, codigo, ubicacion, imagen_url, estado, fecha_ultima_inspeccion })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+};
+
+module.exports = { getAll, create, remove, update };

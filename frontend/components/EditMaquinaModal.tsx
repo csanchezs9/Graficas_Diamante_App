@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -15,9 +15,11 @@ import * as ImagePicker from "expo-image-picker";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
+import { Maquina } from "../types/maquina";
 
 interface Props {
   visible: boolean;
+  maquina: Maquina;
   onClose: () => void;
   onSubmit: (data: {
     nombre: string;
@@ -25,6 +27,7 @@ interface Props {
     codigo: string;
     ubicacion: string;
     imagen_uri: string | null;
+    imagen_url_existing: string | null;
     estado: string;
     fecha_ultima_inspeccion: string | null;
   }) => Promise<void>;
@@ -32,12 +35,20 @@ interface Props {
 
 const estadoOptions = ["En uso", "No en uso"];
 
-export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
+function capitalizeEstado(estado: string): string {
+  const lower = estado.toLowerCase();
+  if (lower === "en uso") return "En uso";
+  if (lower === "no en uso") return "No en uso";
+  return "En uso";
+}
+
+export default function EditMaquinaModal({ visible, maquina, onClose, onSubmit }: Props) {
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [codigo, setCodigo] = useState("");
   const [ubicacion, setUbicacion] = useState("");
   const [imagenUri, setImagenUri] = useState<string | null>(null);
+  const [imagenUrlExisting, setImagenUrlExisting] = useState<string | null>(null);
   const [estado, setEstado] = useState("En uso");
   const [showEstadoMenu, setShowEstadoMenu] = useState(false);
   const [fechaInspeccion, setFechaInspeccion] = useState<Date | null>(null);
@@ -49,17 +60,25 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
   const codigoRef = useRef<TextInput>(null);
   const ubicacionRef = useRef<TextInput>(null);
 
-  const resetForm = () => {
-    setNombre("");
-    setDescripcion("");
-    setCodigo("");
-    setUbicacion("");
-    setImagenUri(null);
-    setEstado("En uso");
-    setFechaInspeccion(null);
-    setShowEstadoMenu(false);
-    setShowDatePicker(false);
-  };
+  // Pre-fill form with existing data
+  useEffect(() => {
+    if (visible && maquina) {
+      setNombre(maquina.nombre || "");
+      setDescripcion(maquina.descripcion || "");
+      setCodigo(maquina.codigo || "");
+      setUbicacion(maquina.ubicacion || "");
+      setImagenUri(null);
+      setImagenUrlExisting(maquina.imagen_url || null);
+      setEstado(capitalizeEstado(maquina.estado || "en uso"));
+      setFechaInspeccion(
+        maquina.fecha_ultima_inspeccion
+          ? new Date(maquina.fecha_ultima_inspeccion)
+          : null
+      );
+      setShowEstadoMenu(false);
+      setShowDatePicker(false);
+    }
+  }, [visible, maquina]);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -72,6 +91,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
 
     if (!result.canceled && result.assets[0]) {
       setImagenUri(result.assets[0].uri);
+      setImagenUrlExisting(null);
     }
   };
 
@@ -94,12 +114,12 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
         codigo: codigo.trim(),
         ubicacion: ubicacion.trim(),
         imagen_uri: imagenUri,
+        imagen_url_existing: imagenUrlExisting,
         estado: estado.toLowerCase(),
         fecha_ultima_inspeccion: fechaInspeccion
           ? fechaInspeccion.toISOString()
           : null,
       });
-      resetForm();
       onClose();
     } catch {
       // error handled by parent
@@ -107,6 +127,8 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
       setLoading(false);
     }
   };
+
+  const currentImagePreview = imagenUri || imagenUrlExisting;
 
   // ── Shared styles ──
   const labelStyle = {
@@ -149,10 +171,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
           }}
         >
           <Pressable
-            onPress={() => {
-              resetForm();
-              onClose();
-            }}
+            onPress={onClose}
             style={{
               width: 40,
               height: 40,
@@ -162,7 +181,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
               justifyContent: "center",
             }}
           >
-            <Feather name="arrow-left" size={20} color="#A0A0A0" />
+            <Feather name="x" size={20} color="#A0A0A0" />
           </Pressable>
           <Text
             style={{
@@ -171,7 +190,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
               fontFamily: "Inter_600SemiBold",
             }}
           >
-            Nueva Máquina
+            Editar Máquina
           </Text>
           <View style={{ width: 40 }} />
         </View>
@@ -184,7 +203,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* ── Nombre ── */}
+          {/* Nombre */}
           <Text style={labelStyle}>Nombre *</Text>
           <TextInput
             value={nombre}
@@ -197,7 +216,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
             style={inputStyle}
           />
 
-          {/* ── Descripción ── */}
+          {/* Descripción */}
           <Text style={labelStyle}>Descripción</Text>
           <TextInput
             ref={descripcionRef}
@@ -217,7 +236,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
             }}
           />
 
-          {/* ── Código ── */}
+          {/* Código */}
           <Text style={labelStyle}>Código</Text>
           <TextInput
             ref={codigoRef}
@@ -231,7 +250,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
             style={inputStyle}
           />
 
-          {/* ── Ubicación ── */}
+          {/* Ubicación */}
           <Text style={labelStyle}>Ubicación</Text>
           <TextInput
             ref={ubicacionRef}
@@ -243,7 +262,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
             style={{ ...inputStyle, marginBottom: 24 }}
           />
 
-          {/* ── Foto Principal ── */}
+          {/* Foto Principal */}
           <Text style={labelStyle}>Foto Principal</Text>
           <Pressable
             onPress={pickImage}
@@ -254,23 +273,18 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
               borderRadius: 14,
               overflow: "hidden",
               marginBottom: 24,
-              minHeight: imagenUri ? undefined : 120,
+              minHeight: currentImagePreview ? undefined : 120,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            {imagenUri ? (
+            {currentImagePreview ? (
               <View style={{ width: "100%" }}>
                 <Image
-                  source={{ uri: imagenUri }}
-                  style={{
-                    width: "100%",
-                    height: 180,
-                    borderRadius: 13,
-                  }}
+                  source={{ uri: currentImagePreview }}
+                  style={{ width: "100%", height: 180, borderRadius: 13 }}
                   resizeMode="cover"
                 />
-                {/* Overlay para cambiar */}
                 <View
                   style={{
                     position: "absolute",
@@ -324,7 +338,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
             )}
           </Pressable>
 
-          {/* ── Estado (dropdown) ── */}
+          {/* Estado (dropdown) */}
           <Text style={labelStyle}>Estado</Text>
           <View style={{ marginBottom: 24 }}>
             <Pressable
@@ -347,8 +361,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
                     width: 8,
                     height: 8,
                     borderRadius: 4,
-                    backgroundColor:
-                      estado === "En uso" ? "#22C55E" : "#F59E0B",
+                    backgroundColor: estado === "En uso" ? "#22C55E" : "#F59E0B",
                   }}
                 />
                 <Text
@@ -368,7 +381,6 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
               />
             </Pressable>
 
-            {/* Dropdown menu */}
             {showEstadoMenu && (
               <View
                 style={{
@@ -414,25 +426,20 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
                             width: 8,
                             height: 8,
                             borderRadius: 4,
-                            backgroundColor:
-                              option === "En uso" ? "#22C55E" : "#F59E0B",
+                            backgroundColor: option === "En uso" ? "#22C55E" : "#F59E0B",
                           }}
                         />
                         <Text
                           style={{
                             color: isSelected ? "#60A5FA" : "#A0A0A0",
                             fontSize: 15,
-                            fontFamily: isSelected
-                              ? "Inter_500Medium"
-                              : "Inter_400Regular",
+                            fontFamily: isSelected ? "Inter_500Medium" : "Inter_400Regular",
                           }}
                         >
                           {option}
                         </Text>
                       </View>
-                      {isSelected && (
-                        <Feather name="check" size={16} color="#60A5FA" />
-                      )}
+                      {isSelected && <Feather name="check" size={16} color="#60A5FA" />}
                     </Pressable>
                   );
                 })}
@@ -440,7 +447,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
             )}
           </View>
 
-          {/* ── Fecha de Última Inspección ── */}
+          {/* Fecha de Última Inspección */}
           <Text style={labelStyle}>Fecha de Última Inspección</Text>
           <Pressable
             onPress={() => setShowDatePicker(true)}
@@ -515,7 +522,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
             </View>
           )}
 
-          {/* ── Submit ── */}
+          {/* Submit */}
           <Pressable
             onPress={handleSubmit}
             disabled={loading || !nombre.trim()}
@@ -537,7 +544,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
                   fontFamily: "Inter_600SemiBold",
                 }}
               >
-                Crear Máquina
+                Guardar Cambios
               </Text>
             )}
           </Pressable>

@@ -1,6 +1,6 @@
 import { Maquina } from "../types/maquina";
 
-const API_URL = "http://localhost:3000/api";
+const API_URL = "http://192.168.1.2:3000/api";
 
 export const api = {
   // Máquinas
@@ -25,6 +25,16 @@ export const api = {
       method: "DELETE",
     });
     if (!res.ok) throw new Error("Error al eliminar máquina");
+  },
+
+  async updateMaquina(id: string, data: Omit<Maquina, "id" | "created_at">): Promise<Maquina> {
+    const res = await fetch(`${API_URL}/maquinas/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Error al actualizar máquina");
+    return res.json();
   },
 
   async uploadImage(uri: string): Promise<string> {

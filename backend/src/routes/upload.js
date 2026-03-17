@@ -8,10 +8,15 @@ const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.post('/', upload.single('image'), async (req, res) => {
+  console.log('[UPLOAD] Request received');
+  console.log('[UPLOAD] File:', req.file ? { name: req.file.originalname, size: req.file.size, mime: req.file.mimetype } : 'NO FILE');
+  
   if (!req.file) return res.status(400).json({ error: 'No image provided' });
 
   const ext = path.extname(req.file.originalname);
   const fileName = `${crypto.randomUUID()}${ext}`;
+
+  console.log('[UPLOAD] Uploading to Supabase:', fileName);
 
   const { error } = await supabase.storage
     .from('maquinas')
@@ -19,9 +24,13 @@ router.post('/', upload.single('image'), async (req, res) => {
       contentType: req.file.mimetype,
     });
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    console.log('[UPLOAD] Supabase error:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
 
   const { data } = supabase.storage.from('maquinas').getPublicUrl(fileName);
+  console.log('[UPLOAD] Success, URL:', data.publicUrl);
 
   res.json({ url: data.publicUrl });
 });

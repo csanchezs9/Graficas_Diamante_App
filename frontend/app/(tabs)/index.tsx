@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { api } from "../../services/api";
 import { Maquina } from "../../types/maquina";
 import MaquinaCard from "../../components/MaquinaCard";
 import AddMaquinaModal from "../../components/AddMaquinaModal";
+import { useFocusEffect } from "expo-router";
 
 export default function MaquinasScreen() {
   const [maquinas, setMaquinas] = useState<Maquina[]>([]);
@@ -33,9 +34,11 @@ export default function MaquinasScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchMaquinas();
-  }, [fetchMaquinas]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchMaquinas();
+    }, [fetchMaquinas])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -65,12 +68,28 @@ export default function MaquinasScreen() {
     descripcion: string;
     codigo: string;
     ubicacion: string;
+    imagen_uri: string | null;
     estado: string;
+    fecha_ultima_inspeccion: string | null;
   }) => {
+    let imagen_url: string | null = null;
+
+    if (data.imagen_uri) {
+      try {
+        imagen_url = await api.uploadImage(data.imagen_uri);
+      } catch {
+        Alert.alert("Error", "No se pudo subir la imagen");
+      }
+    }
+
     const newMaquina = await api.createMaquina({
-      ...data,
-      imagen_url: null,
-      fecha_ultima_inspeccion: null,
+      nombre: data.nombre,
+      descripcion: data.descripcion,
+      codigo: data.codigo,
+      ubicacion: data.ubicacion,
+      imagen_url,
+      estado: data.estado,
+      fecha_ultima_inspeccion: data.fecha_ultima_inspeccion,
     });
     setMaquinas((prev) => [newMaquina, ...prev]);
   };
@@ -139,10 +158,12 @@ export default function MaquinasScreen() {
       <FlatList
         data={maquinas}
         keyExtractor={(item) => item.id}
+        numColumns={2}
+        columnWrapperStyle={{ gap: 4 }}
         renderItem={({ item }) => (
           <MaquinaCard maquina={item} onDelete={handleDelete} />
         )}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
+        contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 100, gap: 4 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

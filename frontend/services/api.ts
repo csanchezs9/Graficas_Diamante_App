@@ -2,7 +2,7 @@ import { Maquina } from "../types/maquina";
 import { Mantenimiento } from "../types/mantenimiento";
 import { Repuesto } from "../types/repuesto";
 
-const API_URL = "http://192.168.1.2:3000/api";
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api";
 
 export const api = {
   // Máquinas
@@ -28,11 +28,18 @@ export const api = {
     return res.json();
   },
 
-  async deleteMaquina(id: string): Promise<void> {
-    const res = await fetch(`${API_URL}/maquinas/${id}`, {
-      method: "DELETE",
-    });
-    if (!res.ok) throw new Error("Error al eliminar máquina");
+  async deleteMaquina(id: string, cascade: boolean = false): Promise<void> {
+    const url = cascade
+      ? `${API_URL}/maquinas/${id}?cascade=true`
+      : `${API_URL}/maquinas/${id}`;
+    const res = await fetch(url, { method: "DELETE" });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      const err: any = new Error(body?.error || "Error al eliminar máquina");
+      err.status = res.status;
+      err.count = body?.count;
+      throw err;
+    }
   },
 
   async updateMaquina(id: string, data: Omit<Maquina, "id" | "created_at">): Promise<Maquina> {
@@ -92,11 +99,18 @@ export const api = {
     return res.json();
   },
 
-  async deleteMantenimiento(id: string): Promise<void> {
-    const res = await fetch(`${API_URL}/mantenimientos/${id}`, {
-      method: "DELETE",
-    });
-    if (!res.ok) throw new Error("Error al eliminar mantenimiento");
+  async deleteMantenimiento(id: string, cascade: boolean = false): Promise<void> {
+    const url = cascade
+      ? `${API_URL}/mantenimientos/${id}?cascade=true`
+      : `${API_URL}/mantenimientos/${id}`;
+    const res = await fetch(url, { method: "DELETE" });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      const err: any = new Error(body?.error || "Error al eliminar mantenimiento");
+      err.status = res.status;
+      err.count = body?.count;
+      throw err;
+    }
   },
 
   async updateMantenimiento(id: string, data: Partial<Mantenimiento>): Promise<Mantenimiento> {
@@ -139,7 +153,10 @@ export const api = {
     const res = await fetch(`${API_URL}/repuestos/${id}`, {
       method: "DELETE",
     });
-    if (!res.ok) throw new Error("Error al eliminar repuesto");
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      throw new Error(body?.error || "Error al eliminar repuesto");
+    }
   },
 
   async updateRepuesto(id: string, data: Partial<Repuesto>): Promise<Repuesto> {

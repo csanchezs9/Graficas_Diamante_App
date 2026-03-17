@@ -10,7 +10,6 @@ import {
   ActivityIndicator,
   Modal,
   Dimensions,
-  Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Mantenimiento } from "../../types/mantenimiento";
@@ -18,6 +17,8 @@ import { Repuesto } from "../../types/repuesto";
 import { api } from "../../services/api";
 import EditMantenimientoModal from "../../components/EditMantenimientoModal";
 import LinkedItemCard from "../../components/LinkedItemCard";
+import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
+import { useToast } from "../../context/ToastContext";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -34,6 +35,10 @@ export default function MantenimientoDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [confirm, setConfirm] = useState<{ visible: boolean; title: string; message: string; actions: ConfirmDialogAction[]; icon?: any }>({
+    visible: false, title: "", message: "", actions: [],
+  });
+  const { showToast } = useToast();
 
   useFocusEffect(
     useCallback(() => {
@@ -62,23 +67,61 @@ export default function MantenimientoDetailScreen() {
     }, [id])
   );
 
+  const closeConfirm = () => setConfirm((prev) => ({ ...prev, visible: false }));
+
   const handleDelete = () => {
     if (!mantenimiento) return;
-    Alert.alert("Eliminar", "¿Eliminar este mantenimiento?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await api.deleteMantenimiento(mantenimiento.id);
-            router.back();
-          } catch {
-            Alert.alert("Error", "No se pudo eliminar");
-          }
+    setConfirm({
+      visible: true,
+      title: "Eliminar mantenimiento",
+      message: "¿Estás seguro de que deseas eliminarlo? Esta acción no se puede deshacer.",
+      icon: "trash-2",
+      actions: [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.deleteMantenimiento(mantenimiento.id);
+              closeConfirm();
+              showToast("success", "Mantenimiento eliminado");
+              router.back();
+            } catch (err: any) {
+              if (err.status === 409) {
+                setConfirm({
+                  visible: true,
+                  title: "Tiene registros asociados",
+                  message: `${err.message}\n\n¿Deseas eliminar el mantenimiento junto con todos sus repuestos?`,
+                  icon: "alert-triangle",
+                  actions: [
+                    { text: "Cancelar", style: "cancel" },
+                    {
+                      text: "Eliminar todo",
+                      style: "destructive",
+                      onPress: async () => {
+                        try {
+                          await api.deleteMantenimiento(mantenimiento.id, true);
+                          closeConfirm();
+                          showToast("success", "Mantenimiento y repuestos eliminados");
+                          router.back();
+                        } catch (e: any) {
+                          closeConfirm();
+                          showToast("error", e.message || "No se pudo eliminar");
+                        }
+                      },
+                    },
+                  ],
+                });
+              } else {
+                closeConfirm();
+                showToast("error", err.message || "No se pudo eliminar");
+              }
+            }
+          },
         },
-      },
-    ]);
+      ],
+    });
   };
 
   const handleEdit = async (editData: {
@@ -490,6 +533,14 @@ export default function MantenimientoDetailScreen() {
           onSubmit={handleEdit}
         />
       )}
+      <ConfirmDialog
+        visible={confirm.visible}
+        title={confirm.title}
+        message={confirm.message}
+        actions={confirm.actions}
+        icon={confirm.icon}
+        onClose={() => setConfirm((prev) => ({ ...prev, visible: false }))}
+      />
     </View>
   );
 }

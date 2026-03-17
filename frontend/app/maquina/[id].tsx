@@ -10,7 +10,6 @@ import {
   ActivityIndicator,
   Modal,
   Dimensions,
-  Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Maquina } from "../../types/maquina";
@@ -18,6 +17,8 @@ import { Mantenimiento } from "../../types/mantenimiento";
 import { api } from "../../services/api";
 import EditMaquinaModal from "../../components/EditMaquinaModal";
 import LinkedItemCard from "../../components/LinkedItemCard";
+import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
+import { useToast } from "../../context/ToastContext";
 
 const tipoConfig: Record<string, { color: string; bg: string; icon: string; label: string }> = {
   preventivo: { color: "#3B82F6", bg: "rgba(59,130,246,0.12)", icon: "shield", label: "Preventivo" },
@@ -39,6 +40,10 @@ export default function MaquinaDetailScreen() {
   const [imagePreviewVisible, setImagePreviewVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [mantenimientos, setMantenimientos] = useState<Mantenimiento[]>([]);
+  const [confirm, setConfirm] = useState<{ visible: boolean; title: string; message: string; actions: ConfirmDialogAction[]; icon?: any }>({
+    visible: false, title: "", message: "", actions: [],
+  });
+  const { showToast } = useToast();
 
   useFocusEffect(
     useCallback(() => {
@@ -85,7 +90,7 @@ export default function MaquinaDetailScreen() {
       try {
         imagen_url = await api.uploadImage(editData.imagen_uri);
       } catch {
-        Alert.alert("Error", "No se pudo subir la imagen");
+        showToast("warning", "No se pudo subir la imagen");
       }
     }
 
@@ -100,6 +105,64 @@ export default function MaquinaDetailScreen() {
     });
 
     setMaquina(updated);
+    showToast("success", "Máquina actualizada");
+  };
+
+  const closeConfirm = () => setConfirm((prev) => ({ ...prev, visible: false }));
+
+  const handleDelete = () => {
+    if (!maquina) return;
+    setConfirm({
+      visible: true,
+      title: "Eliminar máquina",
+      message: "¿Estás seguro de que deseas eliminarla? Esta acción no se puede deshacer.",
+      icon: "trash-2",
+      actions: [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.deleteMaquina(maquina.id);
+              closeConfirm();
+              showToast("success", "Máquina eliminada");
+              router.back();
+            } catch (err: any) {
+              if (err.status === 409) {
+                setConfirm({
+                  visible: true,
+                  title: "Tiene registros asociados",
+                  message: `${err.message}\n\n¿Deseas eliminar la máquina junto con todos sus mantenimientos y repuestos?`,
+                  icon: "alert-triangle",
+                  actions: [
+                    { text: "Cancelar", style: "cancel" },
+                    {
+                      text: "Eliminar todo",
+                      style: "destructive",
+                      onPress: async () => {
+                        try {
+                          await api.deleteMaquina(maquina.id, true);
+                          closeConfirm();
+                          showToast("success", "Máquina y registros eliminados");
+                          router.back();
+                        } catch (e: any) {
+                          closeConfirm();
+                          showToast("error", e.message || "No se pudo eliminar");
+                        }
+                      },
+                    },
+                  ],
+                });
+              } else {
+                closeConfirm();
+                showToast("error", err.message || "No se pudo eliminar");
+              }
+            }
+          },
+        },
+      ],
+    });
   };
 
   if (loading) {
@@ -438,6 +501,62 @@ export default function MaquinaDetailScreen() {
               </View>
             )}
           </View>
+
+          {/* Edit button */}
+          <Pressable
+            onPress={() => setEditModalVisible(true)}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              backgroundColor: "rgba(59,130,246,0.08)",
+              borderWidth: 1,
+              borderColor: "rgba(59,130,246,0.2)",
+              paddingVertical: 14,
+              borderRadius: 14,
+              marginTop: 12,
+            }}
+          >
+            <Feather name="edit-2" size={16} color="#3B82F6" />
+            <Text
+              style={{
+                color: "#3B82F6",
+                fontSize: 15,
+                fontFamily: "Inter_500Medium",
+              }}
+            >
+              Editar Máquina
+            </Text>
+          </Pressable>
+
+          {/* Delete button */}
+          <Pressable
+            onPress={handleDelete}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              backgroundColor: "rgba(239,68,68,0.08)",
+              borderWidth: 1,
+              borderColor: "rgba(239,68,68,0.2)",
+              paddingVertical: 14,
+              borderRadius: 14,
+              marginTop: 10,
+            }}
+          >
+            <Feather name="trash-2" size={16} color="#EF4444" />
+            <Text
+              style={{
+                color: "#EF4444",
+                fontSize: 15,
+                fontFamily: "Inter_500Medium",
+              }}
+            >
+              Eliminar Máquina
+            </Text>
+          </Pressable>
         </View>
       </ScrollView>
 
@@ -494,6 +613,14 @@ export default function MaquinaDetailScreen() {
         maquina={maquina}
         onClose={() => setEditModalVisible(false)}
         onSubmit={handleEdit}
+      />
+      <ConfirmDialog
+        visible={confirm.visible}
+        title={confirm.title}
+        message={confirm.message}
+        actions={confirm.actions}
+        icon={confirm.icon}
+        onClose={() => setConfirm((prev) => ({ ...prev, visible: false }))}
       />
     </View>
   );

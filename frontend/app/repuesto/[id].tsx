@@ -10,14 +10,13 @@ import {
   ActivityIndicator,
   Modal,
   Dimensions,
-  Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { Repuesto } from "../../types/repuesto";
-import { Mantenimiento } from "../../types/mantenimiento";
 import { api } from "../../services/api";
 import EditRepuestoModal from "../../components/EditRepuestoModal";
-import LinkedItemCard from "../../components/LinkedItemCard";
+import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
+import { useToast } from "../../context/ToastContext";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -30,37 +29,27 @@ export default function RepuestoDetailScreen() {
   const { id, data } = useLocalSearchParams<{ id: string; data?: string }>();
   const router = useRouter();
   const [repuesto, setRepuesto] = useState<Repuesto | null>(null);
-  const [mantenimiento, setMantenimiento] = useState<Mantenimiento | null>(null);
   const [loading, setLoading] = useState(true);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [confirm, setConfirm] = useState<{ visible: boolean; title: string; message: string; actions: ConfirmDialogAction[]; icon?: any }>({
+    visible: false, title: "", message: "", actions: [],
+  });
+  const { showToast } = useToast();
 
   useFocusEffect(
     useCallback(() => {
       if (!id) return;
 
       const fetchData = async () => {
-        let rep: Repuesto | null = null;
-
         try {
-          rep = await api.getRepuesto(id);
+          const rep = await api.getRepuesto(id);
           setRepuesto(rep);
         } catch {
           if (data) {
-            try {
-              rep = JSON.parse(data);
-              setRepuesto(rep);
-            } catch {}
+            try { setRepuesto(JSON.parse(data)); } catch {}
           }
         }
-
-        if (rep?.mantenimiento_id) {
-          try {
-            const mant = await api.getMantenimiento(rep.mantenimiento_id);
-            setMantenimiento(mant);
-          } catch {}
-        }
-
         setLoading(false);
       };
 
@@ -68,23 +57,34 @@ export default function RepuestoDetailScreen() {
     }, [id])
   );
 
+  const closeConfirm = () => setConfirm((prev) => ({ ...prev, visible: false }));
+
   const handleDelete = () => {
     if (!repuesto) return;
-    Alert.alert("Eliminar", "¿Eliminar este repuesto?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await api.deleteRepuesto(repuesto.id);
-            router.back();
-          } catch {
-            Alert.alert("Error", "No se pudo eliminar");
-          }
+    setConfirm({
+      visible: true,
+      title: "Eliminar repuesto",
+      message: "¿Estás seguro de que deseas eliminarlo? Esta acción no se puede deshacer.",
+      icon: "trash-2",
+      actions: [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.deleteRepuesto(repuesto.id);
+              closeConfirm();
+              showToast("success", "Repuesto eliminado");
+              router.back();
+            } catch (err: any) {
+              closeConfirm();
+              showToast("error", err.message || "No se pudo eliminar");
+            }
+          },
         },
-      },
-    ]);
+      ],
+    });
   };
 
   const handleEdit = async (editData: {
@@ -121,8 +121,6 @@ export default function RepuestoDetailScreen() {
   }
 
   const tc = tipoConfig[repuesto.tipo] || tipoConfig.mecanico;
-  const machineName = repuesto.mantenimientos?.maquinas?.nombre || "—";
-
   return (
     <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
@@ -315,25 +313,6 @@ export default function RepuestoDetailScreen() {
             />
           </View>
 
-          {/* Mantenimiento Asociado */}
-          <View style={{ marginTop: 8, marginBottom: 20 }}>
-            <Text style={sectionLabel}>Mantenimiento Asociado</Text>
-            <LinkedItemCard
-              imageUrl={mantenimiento?.fotos_urls?.[0] || null}
-              fallbackIcon="tool"
-              title={machineName}
-              subtitle={mantenimiento?.descripcion || repuesto.mantenimientos?.descripcion}
-              onPress={() => {
-                if (mantenimiento) {
-                  router.push({
-                    pathname: "/mantenimiento/[id]",
-                    params: { id: mantenimiento.id, data: JSON.stringify(mantenimiento) },
-                  });
-                }
-              }}
-            />
-          </View>
-
           {/* Edit button */}
           <Pressable
             onPress={() => setEditModalVisible(true)}
@@ -445,6 +424,14 @@ export default function RepuestoDetailScreen() {
           onSubmit={handleEdit}
         />
       )}
+      <ConfirmDialog
+        visible={confirm.visible}
+        title={confirm.title}
+        message={confirm.message}
+        actions={confirm.actions}
+        icon={confirm.icon}
+        onClose={() => setConfirm((prev) => ({ ...prev, visible: false }))}
+      />
     </View>
   );
 }

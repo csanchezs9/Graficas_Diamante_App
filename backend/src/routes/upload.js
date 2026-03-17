@@ -5,19 +5,49 @@ const path = require('path');
 const crypto = require('crypto');
 
 const router = Router();
-const upload = multer({ storage: multer.memoryStorage() });
 
-router.post('/', upload.single('image'), async (req, res) => {
+const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+const ALLOWED_BUCKETS = ['maquinas', 'mantenimientos', 'repuestos'];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_FILE_SIZE },
+  fileFilter: (_req, file, cb) => {
+    if (ALLOWED_MIMES.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Tipo de archivo no permitido: ${file.mimetype}. Solo se aceptan imágenes (JPEG, PNG, WebP).`));
+    }
+  },
+});
+
+router.post('/', (req, res, next) => {
+  upload.single('image')(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'La imagen excede el límite de 5MB' });
+      }
+      return res.status(400).json({ error: err.message });
+    }
+    if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    next();
+  });
+}, async (req, res) => {
   const bucket = req.query.bucket || 'maquinas';
-  console.log('[UPLOAD] Request received, bucket:', bucket);
-  console.log('[UPLOAD] File:', req.file ? { name: req.file.originalname, size: req.file.size, mime: req.file.mimetype } : 'NO FILE');
-  
-  if (!req.file) return res.status(400).json({ error: 'No image provided' });
 
-  const ext = path.extname(req.file.originalname);
+  if (!ALLOWED_BUCKETS.includes(bucket)) {
+    return res.status(400).json({ error: `Bucket no permitido: ${bucket}` });
+  }
+
+  if (!req.file) {
+    return res.status(400).json({ error: 'No se proporcionó ninguna imagen' });
+  }
+
+  const ext = path.extname(req.file.originalname).toLowerCase();
   const fileName = `${crypto.randomUUID()}${ext}`;
-
-  console.log('[UPLOAD] Uploading to Supabase:', fileName);
 
   const { error } = await supabase.storage
     .from(bucket)
@@ -26,13 +56,10 @@ router.post('/', upload.single('image'), async (req, res) => {
     });
 
   if (error) {
-    console.log('[UPLOAD] Supabase error:', error.message);
     return res.status(500).json({ error: error.message });
   }
 
   const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
-  console.log('[UPLOAD] Success, URL:', data.publicUrl);
-
   res.json({ url: data.publicUrl });
 });
 

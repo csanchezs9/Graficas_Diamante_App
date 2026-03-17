@@ -6,7 +6,6 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   StatusBar,
   ScrollView,
   Platform,
@@ -20,6 +19,8 @@ import { api } from "../../services/api";
 import { Maquina } from "../../types/maquina";
 import { Mantenimiento } from "../../types/mantenimiento";
 import AddMantenimientoModal from "../../components/AddMantenimientoModal";
+import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
+import { useToast } from "../../context/ToastContext";
 
 const tipoConfig: Record<string, { color: string; bg: string; icon: string; label: string }> = {
   preventivo: { color: "#3B82F6", bg: "rgba(59,130,246,0.12)", icon: "shield", label: "Preventivo" },
@@ -37,6 +38,10 @@ export default function MantenimientosScreen() {
   const [filterDate, setFilterDate] = useState<Date | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [confirm, setConfirm] = useState<{ visible: boolean; title: string; message: string; actions: ConfirmDialogAction[]; icon?: any }>({
+    visible: false, title: "", message: "", actions: [],
+  });
+  const { showToast } = useToast();
 
   // Extract unique technicians
   const uniqueTecnicos = useMemo(() => {
@@ -84,7 +89,7 @@ export default function MantenimientosScreen() {
       setMantenimientos(mantData);
       setMaquinas(maqData);
     } catch {
-      Alert.alert("Error", "No se pudieron cargar los datos");
+      showToast("error", "No se pudieron cargar los datos");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -118,7 +123,7 @@ export default function MantenimientosScreen() {
         const url = await api.uploadImage(uri, "trabajo");
         fotos_urls.push(url);
       } catch {
-        Alert.alert("Error", "No se pudo subir una imagen");
+        showToast("warning", "No se pudo subir una imagen");
       }
     }
 
@@ -134,22 +139,60 @@ export default function MantenimientosScreen() {
     setMantenimientos((prev) => [newMant, ...prev]);
   };
 
+  const closeConfirm = () => setConfirm((prev) => ({ ...prev, visible: false }));
+
   const handleDelete = (id: string) => {
-    Alert.alert("Eliminar", "¿Eliminar este mantenimiento?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await api.deleteMantenimiento(id);
-            setMantenimientos((prev) => prev.filter((m) => m.id !== id));
-          } catch {
-            Alert.alert("Error", "No se pudo eliminar");
-          }
+    setConfirm({
+      visible: true,
+      title: "Eliminar mantenimiento",
+      message: "¿Estás seguro de que deseas eliminarlo? Esta acción no se puede deshacer.",
+      icon: "trash-2",
+      actions: [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.deleteMantenimiento(id);
+              closeConfirm();
+              setMantenimientos((prev) => prev.filter((m) => m.id !== id));
+              showToast("success", "Mantenimiento eliminado correctamente");
+            } catch (err: any) {
+              if (err.status === 409) {
+                setConfirm({
+                  visible: true,
+                  title: "Tiene registros asociados",
+                  message: `${err.message}\n\n¿Deseas eliminar el mantenimiento junto con todos sus repuestos?`,
+                  icon: "alert-triangle",
+                  actions: [
+                    { text: "Cancelar", style: "cancel" },
+                    {
+                      text: "Eliminar todo",
+                      style: "destructive",
+                      onPress: async () => {
+                        try {
+                          await api.deleteMantenimiento(id, true);
+                          closeConfirm();
+                          setMantenimientos((prev) => prev.filter((m) => m.id !== id));
+                          showToast("success", "Mantenimiento y repuestos eliminados");
+                        } catch (e: any) {
+                          closeConfirm();
+                          showToast("error", e.message || "No se pudo eliminar");
+                        }
+                      },
+                    },
+                  ],
+                });
+              } else {
+                closeConfirm();
+                showToast("error", err.message || "No se pudo eliminar");
+              }
+            }
+          },
         },
-      },
-    ]);
+      ],
+    });
   };
 
   if (loading) {
@@ -673,6 +716,14 @@ export default function MantenimientosScreen() {
         maquinas={maquinas}
         onClose={() => setModalVisible(false)}
         onSubmit={handleCreate}
+      />
+      <ConfirmDialog
+        visible={confirm.visible}
+        title={confirm.title}
+        message={confirm.message}
+        actions={confirm.actions}
+        icon={confirm.icon}
+        onClose={() => setConfirm((prev) => ({ ...prev, visible: false }))}
       />
     </View>
   );

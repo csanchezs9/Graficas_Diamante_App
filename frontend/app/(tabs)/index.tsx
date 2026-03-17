@@ -6,7 +6,6 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   StatusBar,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
@@ -14,6 +13,8 @@ import { api } from "../../services/api";
 import { Maquina } from "../../types/maquina";
 import MaquinaCard from "../../components/MaquinaCard";
 import AddMaquinaModal from "../../components/AddMaquinaModal";
+import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
+import { useToast } from "../../context/ToastContext";
 import { useFocusEffect } from "expo-router";
 
 export default function MaquinasScreen() {
@@ -21,13 +22,17 @@ export default function MaquinasScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [confirm, setConfirm] = useState<{ visible: boolean; title: string; message: string; actions: ConfirmDialogAction[]; icon?: any }>({
+    visible: false, title: "", message: "", actions: [],
+  });
+  const { showToast } = useToast();
 
   const fetchMaquinas = useCallback(async () => {
     try {
       const data = await api.getMaquinas();
       setMaquinas(data);
     } catch {
-      Alert.alert("Error", "No se pudieron cargar las máquinas");
+      showToast("error", "No se pudieron cargar las máquinas");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -45,22 +50,61 @@ export default function MaquinasScreen() {
     fetchMaquinas();
   };
 
+  const closeConfirm = () => setConfirm((prev) => ({ ...prev, visible: false }));
+
   const handleDelete = (id: string) => {
-    Alert.alert("Eliminar máquina", "¿Estás seguro de que deseas eliminarla?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await api.deleteMaquina(id);
-            setMaquinas((prev) => prev.filter((m) => m.id !== id));
-          } catch {
-            Alert.alert("Error", "No se pudo eliminar la máquina");
-          }
+    setConfirm({
+      visible: true,
+      title: "Eliminar máquina",
+      message: "¿Estás seguro de que deseas eliminarla? Esta acción no se puede deshacer.",
+      icon: "trash-2",
+      actions: [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.deleteMaquina(id);
+              closeConfirm();
+              setMaquinas((prev) => prev.filter((m) => m.id !== id));
+              showToast("success", "Máquina eliminada correctamente");
+            } catch (err: any) {
+              if (err.status === 409) {
+                // Reemplaza el contenido del diálogo con la opción de cascade
+                setConfirm({
+                  visible: true,
+                  title: "Tiene registros asociados",
+                  message: `${err.message}\n\n¿Deseas eliminar la máquina junto con todos sus mantenimientos y repuestos?`,
+                  icon: "alert-triangle",
+                  actions: [
+                    { text: "Cancelar", style: "cancel" },
+                    {
+                      text: "Eliminar todo",
+                      style: "destructive",
+                      onPress: async () => {
+                        try {
+                          await api.deleteMaquina(id, true);
+                          closeConfirm();
+                          setMaquinas((prev) => prev.filter((m) => m.id !== id));
+                          showToast("success", "Máquina y registros asociados eliminados");
+                        } catch (e: any) {
+                          closeConfirm();
+                          showToast("error", e.message || "No se pudo eliminar");
+                        }
+                      },
+                    },
+                  ],
+                });
+              } else {
+                closeConfirm();
+                showToast("error", err.message || "No se pudo eliminar la máquina");
+              }
+            }
+          },
         },
-      },
-    ]);
+      ],
+    });
   };
 
   const handleCreate = async (data: {
@@ -78,7 +122,7 @@ export default function MaquinasScreen() {
       try {
         imagen_url = await api.uploadImage(data.imagen_uri);
       } catch {
-        Alert.alert("Error", "No se pudo subir la imagen");
+        showToast("warning", "No se pudo subir la imagen");
       }
     }
 
@@ -92,6 +136,7 @@ export default function MaquinasScreen() {
       fecha_ultima_inspeccion: data.fecha_ultima_inspeccion,
     });
     setMaquinas((prev) => [newMaquina, ...prev]);
+    showToast("success", "Máquina creada correctamente");
   };
 
   if (loading) {
@@ -242,6 +287,14 @@ export default function MaquinasScreen() {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onSubmit={handleCreate}
+      />
+      <ConfirmDialog
+        visible={confirm.visible}
+        title={confirm.title}
+        message={confirm.message}
+        actions={confirm.actions}
+        icon={confirm.icon}
+        onClose={() => setConfirm((prev) => ({ ...prev, visible: false }))}
       />
     </View>
   );

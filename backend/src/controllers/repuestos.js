@@ -44,11 +44,20 @@ const create = async (req, res) => {
     imagen_url,
   } = req.body;
 
+  const missing = [];
+  if (!mantenimiento_id) missing.push('mantenimiento');
+  if (!nombre || !nombre.trim()) missing.push('nombre');
+  if (!tipo) missing.push('tipo');
+
+  if (missing.length > 0) {
+    return res.status(400).json({ error: `Campos requeridos: ${missing.join(', ')}` });
+  }
+
   const { data, error } = await supabase
     .from('repuestos')
     .insert({
       mantenimiento_id,
-      nombre,
+      nombre: nombre.trim(),
       tipo,
       cantidad_disponible: cantidad_disponible || 0,
       costo_unitario: costo_unitario || 0,

@@ -6,7 +6,6 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   StatusBar,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
@@ -15,6 +14,8 @@ import { api } from "../../services/api";
 import { Mantenimiento } from "../../types/mantenimiento";
 import { Repuesto } from "../../types/repuesto";
 import AddRepuestoModal from "../../components/AddRepuestoModal";
+import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
+import { useToast } from "../../context/ToastContext";
 
 const tipoConfig: Record<string, { color: string; bg: string; icon: string; label: string }> = {
   mecanico: { color: "#3B82F6", bg: "rgba(59,130,246,0.12)", icon: "settings", label: "Mecánico" },
@@ -28,6 +29,10 @@ export default function RepuestosScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [confirm, setConfirm] = useState<{ visible: boolean; title: string; message: string; actions: ConfirmDialogAction[]; icon?: any }>({
+    visible: false, title: "", message: "", actions: [],
+  });
+  const { showToast } = useToast();
 
   const fetchData = useCallback(async () => {
     try {
@@ -38,7 +43,7 @@ export default function RepuestosScreen() {
       setRepuestos(repData);
       setMantenimientos(mantData);
     } catch {
-      Alert.alert("Error", "No se pudieron cargar los datos");
+      showToast("error", "No se pudieron cargar los datos");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -71,7 +76,7 @@ export default function RepuestosScreen() {
       try {
         imagen_url = await api.uploadImage(data.imagen_uri, "repuesto");
       } catch {
-        Alert.alert("Error", "No se pudo subir la imagen");
+        showToast("warning", "No se pudo subir la imagen");
       }
     }
 
@@ -88,22 +93,33 @@ export default function RepuestosScreen() {
     setRepuestos((prev) => [newRep, ...prev]);
   };
 
+  const closeConfirm = () => setConfirm((prev) => ({ ...prev, visible: false }));
+
   const handleDelete = (id: string) => {
-    Alert.alert("Eliminar", "¿Eliminar este repuesto?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await api.deleteRepuesto(id);
-            setRepuestos((prev) => prev.filter((r) => r.id !== id));
-          } catch {
-            Alert.alert("Error", "No se pudo eliminar");
-          }
+    setConfirm({
+      visible: true,
+      title: "Eliminar repuesto",
+      message: "¿Estás seguro de que deseas eliminarlo? Esta acción no se puede deshacer.",
+      icon: "trash-2",
+      actions: [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.deleteRepuesto(id);
+              closeConfirm();
+              setRepuestos((prev) => prev.filter((r) => r.id !== id));
+              showToast("success", "Repuesto eliminado correctamente");
+            } catch (err: any) {
+              closeConfirm();
+              showToast("error", err.message || "No se pudo eliminar");
+            }
+          },
         },
-      },
-    ]);
+      ],
+    });
   };
 
   if (loading) {
@@ -453,6 +469,14 @@ export default function RepuestosScreen() {
         mantenimientos={mantenimientos}
         onClose={() => setModalVisible(false)}
         onSubmit={handleCreate}
+      />
+      <ConfirmDialog
+        visible={confirm.visible}
+        title={confirm.title}
+        message={confirm.message}
+        actions={confirm.actions}
+        icon={confirm.icon}
+        onClose={() => setConfirm((prev) => ({ ...prev, visible: false }))}
       />
     </View>
   );

@@ -123,16 +123,22 @@ export default function MantenimientosScreen() {
       }
     }
 
-    const newMant = await api.createMantenimiento({
-      maquina_id: data.maquina_id,
-      fecha_realizacion: data.fecha_realizacion,
-      tecnico_responsable: data.tecnico_responsable,
-      descripcion: data.descripcion,
-      fotos_urls,
-      costo_total: data.costo_total,
-      tipo: data.tipo,
-    });
-    setMantenimientos((prev) => [newMant, ...prev]);
+    try {
+      const newMant = await api.createMantenimiento({
+        maquina_id: data.maquina_id,
+        fecha_realizacion: data.fecha_realizacion,
+        tecnico_responsable: data.tecnico_responsable,
+        descripcion: data.descripcion,
+        fotos_urls,
+        costo_total: data.costo_total,
+        tipo: data.tipo,
+      });
+      setMantenimientos((prev) => [newMant, ...prev]);
+      showToast("success", "Mantenimiento creado correctamente");
+    } catch {
+      showToast("error", "No se pudo crear el mantenimiento");
+      throw new Error("create_failed");
+    }
   };
 
   const closeConfirm = () => setConfirm((prev) => ({ ...prev, visible: false }));

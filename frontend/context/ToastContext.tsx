@@ -17,7 +17,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   });
 
   const showToast = useCallback((type: ToastType, message: string) => {
-    setToast({ visible: true, type, message });
+    // Reset first to re-trigger useEffect if already visible
+    setToast({ visible: false, type: "error", message: "" });
+    setTimeout(() => setToast({ visible: true, type, message }), 50);
   }, []);
 
   const dismiss = useCallback(() => {

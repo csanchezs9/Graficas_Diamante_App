@@ -197,9 +197,16 @@ export default function MantenimientoDetailScreen() {
     return (
       <View className="flex-1 bg-background items-center justify-center">
         <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
-        <Text className="text-textSecondary text-base font-inter-medium">
+        <Feather name="alert-circle" size={40} color="#2A2A2A" />
+        <Text className="text-textSecondary text-base font-inter-medium mt-3">
           Mantenimiento no encontrado
         </Text>
+        <Pressable
+          onPress={() => router.back()}
+          className="mt-4 px-5 py-2.5 bg-surfaceLight rounded-xl active:scale-[0.98]"
+        >
+          <Text className="text-accent text-sm font-inter-medium">Volver</Text>
+        </Pressable>
       </View>
     );
   }

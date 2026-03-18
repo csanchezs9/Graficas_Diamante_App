@@ -82,17 +82,23 @@ export default function RepuestosScreen() {
       }
     }
 
-    const newRep = await api.createRepuesto({
-      mantenimiento_id: data.mantenimiento_id,
-      nombre: data.nombre,
-      tipo: data.tipo,
-      cantidad_disponible: data.cantidad_disponible,
-      costo_unitario: data.costo_unitario,
-      proveedor: data.proveedor,
-      fecha: data.fecha,
-      imagen_url,
-    });
-    setRepuestos((prev) => [newRep, ...prev]);
+    try {
+      const newRep = await api.createRepuesto({
+        mantenimiento_id: data.mantenimiento_id,
+        nombre: data.nombre,
+        tipo: data.tipo,
+        cantidad_disponible: data.cantidad_disponible,
+        costo_unitario: data.costo_unitario,
+        proveedor: data.proveedor,
+        fecha: data.fecha,
+        imagen_url,
+      });
+      setRepuestos((prev) => [newRep, ...prev]);
+      showToast("success", "Repuesto creado correctamente");
+    } catch {
+      showToast("error", "No se pudo crear el repuesto");
+      throw new Error("create_failed");
+    }
   };
 
   const closeConfirm = () => setConfirm((prev) => ({ ...prev, visible: false }));

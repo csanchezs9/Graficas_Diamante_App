@@ -53,12 +53,14 @@ export default function DonutChart({
   }
 
   let accumulated = 0;
-  const segments = data.map((d) => {
-    const pct = d.value / total;
-    const offset = accumulated;
-    accumulated += pct;
-    return { ...d, pct, offset };
-  });
+  const segments = data
+    .filter((d) => d.value > 0)
+    .map((d) => {
+      const pct = d.value / total;
+      const offset = accumulated;
+      accumulated += pct;
+      return { ...d, pct, offset };
+    });
 
   return (
     <View className="items-center">
@@ -104,7 +106,7 @@ export default function DonutChart({
 
       {/* Legend */}
       <View className="flex-row gap-5 mt-4">
-        {segments.map((seg) => (
+        {data.map((seg) => (
           <View key={seg.label} className="flex-row items-center gap-2">
             <View
               className="w-2.5 h-2.5 rounded-full"
@@ -114,7 +116,7 @@ export default function DonutChart({
               {seg.label}
             </Text>
             <Text className="text-textPrimary text-xs font-inter-semibold">
-              {Math.round(seg.pct * 100)}%
+              {total > 0 ? Math.round((seg.value / total) * 100) : 0}%
             </Text>
           </View>
         ))}
@@ -169,7 +171,7 @@ function AnimatedSegment({
       stroke={color}
       strokeWidth={strokeWidth}
       fill="none"
-      strokeLinecap="round"
+      strokeLinecap="butt"
       rotation={-90}
       origin={`${cx}, ${cy}`}
       animatedProps={animatedProps}

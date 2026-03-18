@@ -19,6 +19,7 @@ import EditMantenimientoModal from "../../components/EditMantenimientoModal";
 import LinkedItemCard from "../../components/LinkedItemCard";
 import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
 import { useToast } from "../../context/ToastContext";
+import { DetailSkeleton } from "../../components/Skeleton";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -162,9 +163,16 @@ export default function MantenimientoDetailScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-background items-center justify-center">
+      <View className="flex-1 bg-background">
         <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
-        <ActivityIndicator size="large" color="#3B82F6" />
+        <View className="flex-row items-center justify-between px-5 pt-12 pb-4 bg-surface border-b border-border">
+          <View className="w-10 h-10 rounded-full bg-surfaceLight" />
+          <Text className="text-textPrimary text-lg font-inter-semibold">Mantenimiento</Text>
+          <View className="w-10 h-10 rounded-full bg-surfaceLight" />
+        </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <DetailSkeleton hasImage={false} />
+        </ScrollView>
       </View>
     );
   }

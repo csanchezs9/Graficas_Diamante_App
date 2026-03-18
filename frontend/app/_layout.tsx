@@ -24,7 +24,13 @@ export default function RootLayout() {
   return (
     <ToastProvider>
       <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: "#0A0A0A" },
+          animation: "slide_from_right",
+        }}
+      >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="maquina/[id]" />
         <Stack.Screen name="mantenimiento/[id]" />

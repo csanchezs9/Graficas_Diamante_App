@@ -4,7 +4,6 @@ import {
   Text,
   FlatList,
   Pressable,
-  ActivityIndicator,
   RefreshControl,
   StatusBar,
 } from "react-native";
@@ -16,6 +15,7 @@ import { Repuesto } from "../../types/repuesto";
 import AddRepuestoModal from "../../components/AddRepuestoModal";
 import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
 import { useToast } from "../../context/ToastContext";
+import { RepuestosListSkeleton } from "../../components/Skeleton";
 
 const tipoConfig: Record<string, { color: string; bg: string; icon: string; label: string }> = {
   mecanico: { color: "#3B82F6", bg: "rgba(59,130,246,0.12)", icon: "settings", label: "Mecánico" },
@@ -52,6 +52,7 @@ export default function RepuestosScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      setLoading(true);
       fetchData();
     }, [fetchData])
   );
@@ -121,15 +122,6 @@ export default function RepuestosScreen() {
       ],
     });
   };
-
-  if (loading) {
-    return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
-        <ActivityIndicator size="large" color="#3B82F6" />
-      </View>
-    );
-  }
 
   const renderItem = ({ item }: { item: Repuesto }) => {
     const tc = tipoConfig[item.tipo] || tipoConfig.mecanico;
@@ -245,7 +237,7 @@ export default function RepuestosScreen() {
             Repuestos
           </Text>
           <Text className="text-textMuted text-sm font-inter-regular mt-0.5">
-            {repuestos.length} repuesto{repuestos.length !== 1 ? "s" : ""}
+            {loading ? " " : `${repuestos.length} repuesto${repuestos.length !== 1 ? "s" : ""}`}
           </Text>
         </View>
         <Pressable
@@ -256,7 +248,9 @@ export default function RepuestosScreen() {
         </Pressable>
       </View>
 
-      {/* List */}
+      {loading ? (
+        <RepuestosListSkeleton />
+      ) : (
       <FlatList
         data={repuestos}
         keyExtractor={(item) => item.id}
@@ -295,6 +289,7 @@ export default function RepuestosScreen() {
           </View>
         }
       />
+      )}
 
       <AddRepuestoModal
         visible={modalVisible}

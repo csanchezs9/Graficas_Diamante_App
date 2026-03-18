@@ -4,7 +4,6 @@ import {
   Text,
   FlatList,
   Pressable,
-  ActivityIndicator,
   RefreshControl,
   StatusBar,
 } from "react-native";
@@ -16,6 +15,7 @@ import AddMaquinaModal from "../../components/AddMaquinaModal";
 import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
 import { useToast } from "../../context/ToastContext";
 import { useFocusEffect } from "expo-router";
+import { MaquinasListSkeleton } from "../../components/Skeleton";
 
 export default function MaquinasScreen() {
   const [maquinas, setMaquinas] = useState<Maquina[]>([]);
@@ -41,6 +41,7 @@ export default function MaquinasScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      setLoading(true);
       fetchMaquinas();
     }, [fetchMaquinas])
   );
@@ -139,15 +140,6 @@ export default function MaquinasScreen() {
     showToast("success", "Máquina creada correctamente");
   };
 
-  if (loading) {
-    return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
-        <ActivityIndicator size="large" color="#3B82F6" />
-      </View>
-    );
-  }
-
   return (
     <View className="flex-1 bg-background">
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
@@ -159,7 +151,7 @@ export default function MaquinasScreen() {
             Máquinas
           </Text>
           <Text className="text-textMuted text-sm font-inter-regular mt-0.5">
-            {maquinas.length} registrada{maquinas.length !== 1 ? "s" : ""}
+            {loading ? " " : `${maquinas.length} registrada${maquinas.length !== 1 ? "s" : ""}`}
           </Text>
         </View>
         <Pressable
@@ -170,7 +162,9 @@ export default function MaquinasScreen() {
         </Pressable>
       </View>
 
-      {/* List */}
+      {loading ? (
+        <MaquinasListSkeleton />
+      ) : (
       <FlatList
         data={maquinas}
         keyExtractor={(item) => item.id}
@@ -213,6 +207,7 @@ export default function MaquinasScreen() {
           </View>
         }
       />
+      )}
 
       <AddMaquinaModal
         visible={modalVisible}

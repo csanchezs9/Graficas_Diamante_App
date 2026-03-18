@@ -4,7 +4,6 @@ import {
   Text,
   FlatList,
   Pressable,
-  ActivityIndicator,
   RefreshControl,
   StatusBar,
   ScrollView,
@@ -21,6 +20,7 @@ import { Mantenimiento } from "../../types/mantenimiento";
 import AddMantenimientoModal from "../../components/AddMantenimientoModal";
 import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
 import { useToast } from "../../context/ToastContext";
+import { MantenimientosListSkeleton } from "../../components/Skeleton";
 
 const tipoConfig: Record<string, { color: string; bg: string; icon: string; label: string }> = {
   preventivo: { color: "#3B82F6", bg: "rgba(59,130,246,0.12)", icon: "shield", label: "Preventivo" },
@@ -98,6 +98,7 @@ export default function MantenimientosScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      setLoading(true);
       fetchData();
     }, [fetchData])
   );
@@ -195,15 +196,6 @@ export default function MantenimientosScreen() {
     });
   };
 
-  if (loading) {
-    return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
-        <ActivityIndicator size="large" color="#3B82F6" />
-      </View>
-    );
-  }
-
   const renderItem = ({ item }: { item: Mantenimiento }) => {
     const tc = tipoConfig[item.tipo] || tipoConfig.preventivo;
     const machineName = item.maquinas?.nombre || "—";
@@ -281,7 +273,7 @@ export default function MantenimientosScreen() {
             Mantenimiento
           </Text>
           <Text className="text-textMuted text-sm font-inter-regular mt-0.5">
-            {filteredData.length} de {mantenimientos.length} registro{mantenimientos.length !== 1 ? "s" : ""}
+            {loading ? " " : `${filteredData.length} de ${mantenimientos.length} registro${mantenimientos.length !== 1 ? "s" : ""}`}
           </Text>
         </View>
         <Pressable
@@ -292,6 +284,10 @@ export default function MantenimientosScreen() {
         </Pressable>
       </View>
 
+      {loading ? (
+        <MantenimientosListSkeleton />
+      ) : (
+      <>
       {/* Filter toggle */}
       {mantenimientos.length > 0 && (
         <View className="px-5 pb-2.5">
@@ -488,6 +484,8 @@ export default function MantenimientosScreen() {
           </View>
         }
       />
+      </>
+      )}
 
       <AddMantenimientoModal
         visible={modalVisible}

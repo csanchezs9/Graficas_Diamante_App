@@ -19,6 +19,7 @@ import EditMaquinaModal from "../../components/EditMaquinaModal";
 import LinkedItemCard from "../../components/LinkedItemCard";
 import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
 import { useToast } from "../../context/ToastContext";
+import { DetailSkeleton } from "../../components/Skeleton";
 
 const tipoConfig: Record<string, { color: string; bg: string; icon: string; label: string }> = {
   preventivo: { color: "#3B82F6", bg: "rgba(59,130,246,0.12)", icon: "shield", label: "Preventivo" },
@@ -167,9 +168,16 @@ export default function MaquinaDetailScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-background items-center justify-center">
+      <View className="flex-1 bg-background">
         <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
-        <ActivityIndicator size="large" color="#3B82F6" />
+        <View className="flex-row items-center justify-between px-5 pt-12 pb-4 bg-surface border-b border-border">
+          <View className="w-10 h-10 rounded-full bg-surfaceLight" />
+          <Text className="text-textPrimary text-lg font-inter-semibold">Detalle</Text>
+          <View className="w-10 h-10 rounded-full bg-surfaceLight" />
+        </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <DetailSkeleton hasImage />
+        </ScrollView>
       </View>
     );
   }

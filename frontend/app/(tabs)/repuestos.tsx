@@ -124,14 +124,7 @@ export default function RepuestosScreen() {
 
   if (loading) {
     return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "#0A0A0A",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <View className="flex-1 bg-background items-center justify-center">
         <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
         <ActivityIndicator size="large" color="#3B82F6" />
       </View>
@@ -151,228 +144,113 @@ export default function RepuestosScreen() {
     };
 
     return (
-      <Pressable onPress={handleItemPress}>
-        <View
-          style={{
-            backgroundColor: "#161616",
-            borderRadius: 14,
-            borderWidth: 1,
-            borderColor: "#222",
-            padding: 14,
-            marginHorizontal: 20,
-            marginBottom: 10,
-          }}
-        >
-          {/* Top row: icon + name + type badge */}
+      <Pressable
+        onPress={handleItemPress}
+        className="bg-surface border-[0.5px] border-border rounded-2xl p-3.5 mx-5 mb-2.5 shadow-lg shadow-accent/5 active:scale-[0.98]"
+      >
+        {/* Top row: icon + name + type badge */}
+        <View className="flex-row items-center mb-2.5">
           <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 10,
-            }}
+            className="w-[38px] h-[38px] rounded-[10px] items-center justify-center mr-3"
+            style={{ backgroundColor: tc.bg }}
           >
-            <View
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 10,
-                backgroundColor: tc.bg,
-                alignItems: "center",
-                justifyContent: "center",
-                marginRight: 12,
-              }}
-            >
-              <Feather name={tc.icon as any} size={18} color={tc.color} />
-            </View>
-            <View style={{ flex: 1, marginRight: 8 }}>
-              <Text
-                numberOfLines={1}
-                style={{
-                  color: "#F0F0F0",
-                  fontSize: 16,
-                  fontFamily: "Inter_600SemiBold",
-                }}
-              >
-                {item.nombre}
-              </Text>
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: tc.bg,
-                paddingHorizontal: 8,
-                paddingVertical: 3,
-                borderRadius: 8,
-                gap: 4,
-              }}
-            >
-              <Text
-                style={{
-                  color: tc.color,
-                  fontSize: 10,
-                  fontFamily: "Inter_600SemiBold",
-                }}
-              >
-                {tc.label}
-              </Text>
-            </View>
+            <Feather name={tc.icon as any} size={18} color={tc.color} />
           </View>
-
-          {/* Machine + maintenance association */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-              backgroundColor: "rgba(59,130,246,0.05)",
-              borderRadius: 8,
-              paddingHorizontal: 10,
-              paddingVertical: 7,
-              marginBottom: 10,
-            }}
-          >
-            <Feather name="link" size={11} color="#3B82F6" />
+          <View className="flex-1 mr-2">
             <Text
               numberOfLines={1}
-              style={{
-                color: "#60A5FA",
-                fontSize: 12,
-                fontFamily: "Inter_500Medium",
-                flex: 1,
-              }}
+              className="text-[#F0F0F0] text-base font-inter-semibold"
             >
-              {machineName}
+              {item.nombre}
             </Text>
-            {mantDesc ? (
-              <>
-                <View
-                  style={{
-                    width: 1,
-                    height: 12,
-                    backgroundColor: "#2A2A2A",
-                    marginHorizontal: 4,
-                  }}
-                />
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    color: "#555",
-                    fontSize: 11,
-                    fontFamily: "Inter_400Regular",
-                    flex: 1,
-                  }}
-                >
-                  {mantDesc}
-                </Text>
-              </>
-            ) : null}
           </View>
-
-          {/* Bottom row: qty + cost + provider */}
           <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
+            className="flex-row items-center px-2 py-[3px] rounded-lg gap-1"
+            style={{ backgroundColor: tc.bg }}
           >
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                <Feather name="layers" size={11} color="#444" />
-                <Text
-                  style={{
-                    color: "#666",
-                    fontSize: 12,
-                    fontFamily: "Inter_500Medium",
-                  }}
-                >
-                  {item.cantidad_disponible} uds
+            <Text
+              className="text-[10px] font-inter-semibold"
+              style={{ color: tc.color }}
+            >
+              {tc.label}
+            </Text>
+          </View>
+        </View>
+
+        {/* Machine + maintenance association */}
+        <View className="flex-row items-center gap-1.5 bg-[rgba(59,130,246,0.05)] rounded-lg px-2.5 py-[7px] mb-2.5">
+          <Feather name="link" size={11} color="#3B82F6" />
+          <Text
+            numberOfLines={1}
+            className="text-[#60A5FA] text-xs font-inter-medium flex-1"
+          >
+            {machineName}
+          </Text>
+          {mantDesc ? (
+            <>
+              <View className="w-px h-3 bg-border mx-1" />
+              <Text
+                numberOfLines={1}
+                className="text-[#555] text-[11px] font-inter-regular flex-1"
+              >
+                {mantDesc}
+              </Text>
+            </>
+          ) : null}
+        </View>
+
+        {/* Bottom row: qty + cost + provider */}
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center gap-3.5">
+            <View className="flex-row items-center gap-1">
+              <Feather name="layers" size={11} color="#444" />
+              <Text className="text-[#666] text-xs font-inter-medium">
+                {item.cantidad_disponible} uds
+              </Text>
+            </View>
+            {item.costo_unitario > 0 && (
+              <View className="flex-row items-center gap-1">
+                <Feather name="dollar-sign" size={11} color="#444" />
+                <Text className="text-[#666] text-xs font-inter-medium">
+                  {item.costo_unitario.toLocaleString()}
                 </Text>
               </View>
-              {item.costo_unitario > 0 && (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                  <Feather name="dollar-sign" size={11} color="#444" />
-                  <Text
-                    style={{
-                      color: "#666",
-                      fontSize: 12,
-                      fontFamily: "Inter_500Medium",
-                    }}
-                  >
-                    {item.costo_unitario.toLocaleString()}
-                  </Text>
-                </View>
-              )}
-              {item.proveedor ? (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                  <Feather name="truck" size={11} color="#444" />
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      color: "#666",
-                      fontSize: 12,
-                      fontFamily: "Inter_500Medium",
-                    }}
-                  >
-                    {item.proveedor}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-            <Feather name="chevron-right" size={16} color="#333" />
+            )}
+            {item.proveedor ? (
+              <View className="flex-row items-center gap-1">
+                <Feather name="truck" size={11} color="#444" />
+                <Text
+                  numberOfLines={1}
+                  className="text-[#666] text-xs font-inter-medium"
+                >
+                  {item.proveedor}
+                </Text>
+              </View>
+            ) : null}
           </View>
+          <Feather name="chevron-right" size={16} color="#333" />
         </View>
       </Pressable>
     );
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
+    <View className="flex-1 bg-background">
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
 
       {/* Header */}
-      <View
-        style={{
-          paddingHorizontal: 20,
-          paddingTop: 48,
-          paddingBottom: 16,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
+      <View className="px-5 pt-12 pb-4 flex-row items-center justify-between">
         <View>
-          <Text
-            style={{
-              color: "#F5F5F5",
-              fontSize: 26,
-              fontFamily: "Inter_700Bold",
-            }}
-          >
+          <Text className="text-textPrimary text-[26px] font-inter-bold">
             Repuestos
           </Text>
-          <Text
-            style={{
-              color: "#666",
-              fontSize: 14,
-              fontFamily: "Inter_400Regular",
-              marginTop: 2,
-            }}
-          >
+          <Text className="text-textMuted text-sm font-inter-regular mt-0.5">
             {repuestos.length} repuesto{repuestos.length !== 1 ? "s" : ""}
           </Text>
         </View>
         <Pressable
           onPress={() => setModalVisible(true)}
-          style={{
-            backgroundColor: "#3B82F6",
-            width: 46,
-            height: 46,
-            borderRadius: 14,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="bg-accent w-[46px] h-[46px] rounded-2xl items-center justify-center active:scale-[0.98]"
         >
           <Feather name="plus" size={22} color="white" />
         </Pressable>
@@ -395,68 +273,22 @@ export default function RepuestosScreen() {
           />
         }
         ListEmptyComponent={
-          <View
-            style={{
-              alignItems: "center",
-              justifyContent: "center",
-              paddingTop: 80,
-            }}
-          >
-            <View
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 40,
-                backgroundColor: "#141414",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 20,
-              }}
-            >
+          <View className="items-center justify-center pt-20">
+            <View className="w-20 h-20 rounded-full bg-surface items-center justify-center mb-5">
               <Feather name="package" size={36} color="#2A2A2A" />
             </View>
-            <Text
-              style={{
-                color: "#A0A0A0",
-                fontSize: 16,
-                fontFamily: "Inter_500Medium",
-                marginBottom: 6,
-              }}
-            >
+            <Text className="text-textSecondary text-base font-inter-medium mb-1.5">
               No hay repuestos
             </Text>
-            <Text
-              style={{
-                color: "#555",
-                fontSize: 14,
-                fontFamily: "Inter_400Regular",
-                marginBottom: 24,
-              }}
-            >
+            <Text className="text-[#555] text-sm font-inter-regular mb-6">
               Registra el primer repuesto
             </Text>
             <Pressable
               onPress={() => setModalVisible(true)}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                backgroundColor: "#141414",
-                borderWidth: 1,
-                borderColor: "#2A2A2A",
-                paddingHorizontal: 20,
-                paddingVertical: 12,
-                borderRadius: 14,
-              }}
+              className="flex-row items-center gap-2 bg-surface border border-border px-5 py-3 rounded-2xl active:scale-[0.98]"
             >
               <Feather name="plus" size={18} color="#3B82F6" />
-              <Text
-                style={{
-                  color: "#F5F5F5",
-                  fontSize: 14,
-                  fontFamily: "Inter_500Medium",
-                }}
-              >
+              <Text className="text-textPrimary text-sm font-inter-medium">
                 Nuevo repuesto
               </Text>
             </Pressable>

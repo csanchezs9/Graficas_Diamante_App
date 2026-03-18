@@ -29,83 +29,38 @@ export default function LinkedItemCard({
   return (
     <Pressable
       onPress={onPress}
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#141414",
-        borderWidth: 1,
-        borderColor: "#2A2A2A",
-        borderRadius: 12,
-        padding: 12,
-        gap: 12,
-      }}
+      className="flex-row items-center bg-surface border border-border rounded-2xl p-3 gap-3 active:opacity-90 active:scale-[0.98]"
     >
       {imageUrl ? (
         <Image
           source={{ uri: imageUrl }}
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 10,
-            backgroundColor: "#1E1E1E",
-          }}
+          className="w-11 h-11 rounded-[10px] bg-surfaceLight"
           resizeMode="cover"
         />
       ) : (
-        <View
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 10,
-            backgroundColor: "#1E1E1E",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+        <View className="w-11 h-11 rounded-[10px] bg-surfaceLight items-center justify-center">
           <Feather name={fallbackIcon} size={18} color="#333" />
         </View>
       )}
-      <View style={{ flex: 1 }}>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
+      <View className="flex-1">
+        <View className="flex-row items-center justify-between">
           <Text
             numberOfLines={1}
-            style={{
-              color: "#F0F0F0",
-              fontSize: 14,
-              fontFamily: "Inter_500Medium",
-              flex: 1,
-              marginRight: badgeLabel ? 8 : 0,
-            }}
+            className={`text-[#F0F0F0] text-sm font-inter-medium flex-1 ${badgeLabel ? "mr-2" : ""}`}
           >
             {title}
           </Text>
           {badgeLabel && badgeColor && badgeBg && (
             <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: badgeBg,
-                paddingHorizontal: 8,
-                paddingVertical: 3,
-                borderRadius: 8,
-                gap: 4,
-              }}
+              className="flex-row items-center px-2 py-[3px] rounded-lg gap-1"
+              style={{ backgroundColor: badgeBg }}
             >
               {badgeIcon && (
                 <Feather name={badgeIcon} size={10} color={badgeColor} />
               )}
               <Text
-                style={{
-                  color: badgeColor,
-                  fontSize: 10,
-                  fontFamily: "Inter_600SemiBold",
-                }}
+                className="text-[10px] font-inter-semibold"
+                style={{ color: badgeColor }}
               >
                 {badgeLabel}
               </Text>
@@ -115,12 +70,7 @@ export default function LinkedItemCard({
         {subtitle ? (
           <Text
             numberOfLines={1}
-            style={{
-              color: "#666",
-              fontSize: 12,
-              fontFamily: "Inter_400Regular",
-              marginTop: 3,
-            }}
+            className="text-textMuted text-xs font-inter-regular mt-[3px]"
           >
             {subtitle}
           </Text>
@@ -128,12 +78,7 @@ export default function LinkedItemCard({
         {meta ? (
           <Text
             numberOfLines={1}
-            style={{
-              color: "#555",
-              fontSize: 11,
-              fontFamily: "Inter_400Regular",
-              marginTop: 2,
-            }}
+            className="text-[#555] text-[11px] font-inter-regular mt-0.5"
           >
             {meta}
           </Text>

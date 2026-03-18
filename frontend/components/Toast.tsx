@@ -62,42 +62,17 @@ export default function Toast({ visible, type, message, onDismiss, duration = 35
     >
       <Pressable
         onPress={dismiss}
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          backgroundColor: "#1A1A1A",
-          borderWidth: 1,
-          borderColor: c.border,
-          borderRadius: 14,
-          padding: 14,
-          gap: 12,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.4,
-          shadowRadius: 12,
-          elevation: 8,
-        }}
+        className="flex-row items-center bg-[#1A1A1A] rounded-[14px] p-3.5 gap-3 shadow-lg shadow-black/40"
+        style={{ borderWidth: 1, borderColor: c.border }}
       >
         <View
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            backgroundColor: c.bg,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="w-9 h-9 rounded-[10px] items-center justify-center"
+          style={{ backgroundColor: c.bg }}
         >
           <Feather name={c.icon} size={18} color={c.color} />
         </View>
         <Text
-          style={{
-            flex: 1,
-            color: "#E0E0E0",
-            fontSize: 14,
-            fontFamily: "Inter_500Medium",
-            lineHeight: 20,
-          }}
+          className="flex-1 text-[#E0E0E0] text-sm font-inter-medium leading-5"
           numberOfLines={3}
         >
           {message}

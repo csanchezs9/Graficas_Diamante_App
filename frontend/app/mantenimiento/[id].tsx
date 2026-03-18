@@ -130,15 +130,39 @@ export default function MantenimientoDetailScreen() {
     descripcion: string;
     costo_total: number;
     tipo: string;
+    fotos_urls_existing: string[];
+    fotos_uris_new: string[];
   }) => {
     if (!mantenimiento) return;
-    const updated = await api.updateMantenimiento(mantenimiento.id, editData);
+
+    // Upload new photos
+    const newUrls: string[] = [];
+    for (const uri of editData.fotos_uris_new) {
+      try {
+        const url = await api.uploadImage(uri, "trabajo");
+        newUrls.push(url);
+      } catch {
+        showToast("warning", "No se pudo subir una imagen");
+      }
+    }
+
+    const fotos_urls = [...editData.fotos_urls_existing, ...newUrls];
+
+    const updated = await api.updateMantenimiento(mantenimiento.id, {
+      fecha_realizacion: editData.fecha_realizacion,
+      tecnico_responsable: editData.tecnico_responsable,
+      descripcion: editData.descripcion,
+      costo_total: editData.costo_total,
+      tipo: editData.tipo,
+      fotos_urls,
+    });
     setMantenimiento(updated);
+    showToast("success", "Mantenimiento actualizado");
   };
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#0A0A0A", alignItems: "center", justifyContent: "center" }}>
+      <View className="flex-1 bg-background items-center justify-center">
         <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
         <ActivityIndicator size="large" color="#3B82F6" />
       </View>
@@ -147,9 +171,9 @@ export default function MantenimientoDetailScreen() {
 
   if (!mantenimiento) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#0A0A0A", alignItems: "center", justifyContent: "center" }}>
+      <View className="flex-1 bg-background items-center justify-center">
         <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
-        <Text style={{ color: "#A0A0A0", fontSize: 16, fontFamily: "Inter_500Medium" }}>
+        <Text className="text-textSecondary text-base font-inter-medium">
           Mantenimiento no encontrado
         </Text>
       </View>
@@ -160,108 +184,53 @@ export default function MantenimientoDetailScreen() {
   const machineName = mantenimiento.maquinas?.nombre || "—";
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
+    <View className="flex-1 bg-background">
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
 
       {/* Header */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: 20,
-          paddingTop: 48,
-          paddingBottom: 16,
-          backgroundColor: "#141414",
-          borderBottomWidth: 1,
-          borderBottomColor: "#2A2A2A",
-        }}
-      >
+      <View className="flex-row items-center justify-between px-5 pt-12 pb-4 bg-surface border-b border-border">
         <Pressable
           onPress={() => router.back()}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: "#1E1E1E",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
         >
           <Feather name="arrow-left" size={20} color="#A0A0A0" />
         </Pressable>
         <Text
-          style={{
-            color: "#F5F5F5",
-            fontSize: 18,
-            fontFamily: "Inter_600SemiBold",
-            flex: 1,
-            textAlign: "center",
-          }}
+          className="text-textPrimary text-lg font-inter-semibold flex-1 text-center"
           numberOfLines={1}
         >
           Mantenimiento
         </Text>
         <Pressable
           onPress={() => setEditModalVisible(true)}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: "#1E1E1E",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
         >
           <Feather name="edit-2" size={18} color="#3B82F6" />
         </Pressable>
       </View>
 
       <ScrollView
-        style={{ flex: 1 }}
+        className="flex-1"
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={{ padding: 20 }}>
+        <View className="p-5">
           {/* Machine name + type badge */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 16,
-            }}
-          >
+          <View className="flex-row items-center justify-between mb-4">
             <Text
-              style={{
-                color: "#F5F5F5",
-                fontSize: 24,
-                fontFamily: "Inter_700Bold",
-                flex: 1,
-                marginRight: 12,
-              }}
+              className="text-textPrimary text-2xl font-inter-bold flex-1 mr-3"
               numberOfLines={2}
             >
               {machineName}
             </Text>
             <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: tc.bg,
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                borderRadius: 20,
-                gap: 6,
-              }}
+              className="flex-row items-center px-3 py-1.5 rounded-[20px] gap-1.5"
+              style={{ backgroundColor: tc.bg }}
             >
               <Feather name={tc.icon as any} size={14} color={tc.color} />
               <Text
-                style={{
-                  color: tc.color,
-                  fontSize: 13,
-                  fontFamily: "Inter_500Medium",
-                }}
+                className="text-[13px] font-inter-medium"
+                style={{ color: tc.color }}
               >
                 {tc.label}
               </Text>
@@ -269,22 +238,17 @@ export default function MantenimientoDetailScreen() {
           </View>
 
           {/* Descripción */}
-          <View style={{ marginBottom: 20 }}>
-            <Text style={sectionLabel}>Descripción</Text>
-            <Text
-              style={{
-                color: "#D0D0D0",
-                fontSize: 15,
-                fontFamily: "Inter_400Regular",
-                lineHeight: 22,
-              }}
-            >
+          <View className="mb-5">
+            <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-1.5">
+              Descripción
+            </Text>
+            <Text className="text-[#D0D0D0] text-[15px] font-inter-regular leading-[22px]">
               {mantenimiento.descripcion}
             </Text>
           </View>
 
           {/* Info rows */}
-          <View style={{ gap: 10, marginBottom: 20 }}>
+          <View className="gap-2.5 mb-5">
             <InfoRow
               icon="user"
               label="Técnico Responsable"
@@ -325,38 +289,23 @@ export default function MantenimientoDetailScreen() {
 
           {/* Fotos del trabajo */}
           {mantenimiento.fotos_urls && mantenimiento.fotos_urls.length > 0 && (
-            <View style={{ marginBottom: 20 }}>
-              <Text style={sectionLabel}>
+            <View className="mb-5">
+              <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
                 Fotos del Trabajo ({mantenimiento.fotos_urls.length})
               </Text>
-              <View style={{ flexDirection: "row", gap: 10 }}>
+              <View className="flex-row gap-2.5">
                 {mantenimiento.fotos_urls.map((url, i) => (
                   <Pressable
                     key={i}
                     onPress={() => setPreviewImage(url)}
-                    style={{
-                      flex: 1,
-                      height: 120,
-                      borderRadius: 12,
-                      overflow: "hidden",
-                    }}
+                    className="flex-1 h-[120px] rounded-xl overflow-hidden"
                   >
                     <Image
                       source={{ uri: url }}
                       style={{ width: "100%", height: 120 }}
                       resizeMode="cover"
                     />
-                    <View
-                      style={{
-                        position: "absolute",
-                        bottom: 6,
-                        right: 6,
-                        backgroundColor: "rgba(0,0,0,0.6)",
-                        paddingHorizontal: 6,
-                        paddingVertical: 3,
-                        borderRadius: 8,
-                      }}
-                    >
+                    <View className="absolute bottom-1.5 right-1.5 bg-black/60 px-1.5 py-[3px] rounded-lg">
                       <Feather name="maximize-2" size={10} color="#FFF" />
                     </View>
                   </Pressable>
@@ -366,12 +315,12 @@ export default function MantenimientoDetailScreen() {
           )}
 
           {/* Repuestos utilizados */}
-          <View style={{ marginBottom: 20 }}>
-            <Text style={sectionLabel}>
+          <View className="mb-5">
+            <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
               Repuestos Utilizados ({repuestos.length})
             </Text>
             {repuestos.length > 0 ? (
-              <View style={{ gap: 8 }}>
+              <View className="gap-2">
                 {repuestos.map((rep) => {
                   const metaParts = [
                     `Cant: ${rep.cantidad_disponible}`,
@@ -396,25 +345,9 @@ export default function MantenimientoDetailScreen() {
                 })}
               </View>
             ) : (
-              <View
-                style={{
-                  backgroundColor: "#141414",
-                  borderWidth: 1,
-                  borderColor: "#2A2A2A",
-                  borderRadius: 12,
-                  paddingVertical: 20,
-                  alignItems: "center",
-                }}
-              >
+              <View className="bg-surface border border-border rounded-xl py-5 items-center">
                 <Feather name="package" size={20} color="#333" />
-                <Text
-                  style={{
-                    color: "#555",
-                    fontSize: 13,
-                    fontFamily: "Inter_400Regular",
-                    marginTop: 6,
-                  }}
-                >
+                <Text className="text-[#555] text-[13px] font-inter-regular mt-1.5">
                   Sin repuestos registrados
                 </Text>
               </View>
@@ -424,27 +357,10 @@ export default function MantenimientoDetailScreen() {
           {/* Edit button */}
           <Pressable
             onPress={() => setEditModalVisible(true)}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              backgroundColor: "rgba(59,130,246,0.08)",
-              borderWidth: 1,
-              borderColor: "rgba(59,130,246,0.2)",
-              paddingVertical: 14,
-              borderRadius: 14,
-              marginTop: 12,
-            }}
+            className="flex-row items-center justify-center gap-2 bg-accent/[0.08] border border-accent/20 py-3.5 rounded-2xl mt-3 active:scale-[0.98]"
           >
             <Feather name="edit-2" size={16} color="#3B82F6" />
-            <Text
-              style={{
-                color: "#3B82F6",
-                fontSize: 15,
-                fontFamily: "Inter_500Medium",
-              }}
-            >
+            <Text className="text-accent text-[15px] font-inter-medium">
               Editar Mantenimiento
             </Text>
           </Pressable>
@@ -452,27 +368,10 @@ export default function MantenimientoDetailScreen() {
           {/* Delete button */}
           <Pressable
             onPress={handleDelete}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              backgroundColor: "rgba(239,68,68,0.08)",
-              borderWidth: 1,
-              borderColor: "rgba(239,68,68,0.2)",
-              paddingVertical: 14,
-              borderRadius: 14,
-              marginTop: 10,
-            }}
+            className="flex-row items-center justify-center gap-2 bg-danger/[0.08] border border-danger/20 py-3.5 rounded-2xl mt-2.5 active:scale-[0.98]"
           >
             <Feather name="trash-2" size={16} color="#EF4444" />
-            <Text
-              style={{
-                color: "#EF4444",
-                fontSize: 15,
-                fontFamily: "Inter_500Medium",
-              }}
-            >
+            <Text className="text-danger text-[15px] font-inter-medium">
               Eliminar Mantenimiento
             </Text>
           </Pressable>
@@ -488,14 +387,7 @@ export default function MantenimientoDetailScreen() {
           statusBarTranslucent
           onRequestClose={() => setPreviewImage(null)}
         >
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(0,0,0,0.95)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+          <View className="flex-1 bg-black/95 items-center justify-center">
             <Pressable
               onPress={() => setPreviewImage(null)}
               style={{
@@ -503,13 +395,8 @@ export default function MantenimientoDetailScreen() {
                 top: 50,
                 right: 20,
                 zIndex: 10,
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                backgroundColor: "rgba(255,255,255,0.15)",
-                alignItems: "center",
-                justifyContent: "center",
               }}
+              className="w-10 h-10 rounded-full bg-white/15 items-center justify-center"
             >
               <Feather name="x" size={22} color="#FFFFFF" />
             </Pressable>
@@ -545,17 +432,6 @@ export default function MantenimientoDetailScreen() {
   );
 }
 
-// ── Shared ──
-
-const sectionLabel = {
-  color: "#A0A0A0",
-  fontSize: 12,
-  fontFamily: "Inter_500Medium",
-  textTransform: "uppercase" as const,
-  letterSpacing: 1,
-  marginBottom: 8,
-};
-
 function InfoRow({
   icon,
   label,
@@ -566,51 +442,15 @@ function InfoRow({
   value: string | null | undefined;
 }) {
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#141414",
-        borderWidth: 1,
-        borderColor: "#2A2A2A",
-        borderRadius: 14,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        gap: 12,
-      }}
-    >
-      <View
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 10,
-          backgroundColor: "#1E1E1E",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+    <View className="flex-row items-center bg-surface border-[0.5px] border-border rounded-2xl px-4 py-3.5 gap-3">
+      <View className="w-9 h-9 rounded-[10px] bg-surfaceLight items-center justify-center">
         <Feather name={icon} size={16} color="#3B82F6" />
       </View>
-      <View style={{ flex: 1 }}>
-        <Text
-          style={{
-            color: "#666",
-            fontSize: 11,
-            fontFamily: "Inter_500Medium",
-            textTransform: "uppercase",
-            letterSpacing: 0.5,
-            marginBottom: 2,
-          }}
-        >
+      <View className="flex-1">
+        <Text className="text-textMuted text-[11px] font-inter-medium uppercase tracking-wider mb-0.5">
           {label}
         </Text>
-        <Text
-          style={{
-            color: value ? "#F5F5F5" : "#555",
-            fontSize: 15,
-            fontFamily: "Inter_400Regular",
-          }}
-        >
+        <Text className={`text-[15px] font-inter-regular ${value ? "text-textPrimary" : "text-[#555]"}`}>
           {value || "No registrado"}
         </Text>
       </View>

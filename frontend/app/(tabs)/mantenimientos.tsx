@@ -197,14 +197,7 @@ export default function MantenimientosScreen() {
 
   if (loading) {
     return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "#0A0A0A",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <View className="flex-1 bg-background items-center justify-center">
         <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
         <ActivityIndicator size="large" color="#3B82F6" />
       </View>
@@ -223,162 +216,77 @@ export default function MantenimientosScreen() {
     };
 
     return (
-      <Pressable onPress={handleItemPress}>
-        <View
-          style={{
-            backgroundColor: "#161616",
-            borderRadius: 14,
-            borderWidth: 1,
-            borderColor: "#222",
-            padding: 14,
-            marginHorizontal: 20,
-            marginBottom: 10,
-          }}
-        >
-          {/* Top row: machine name + type badge */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 6,
-            }}
-          >
-            <Text
-              numberOfLines={1}
-              style={{
-                color: "#F0F0F0",
-                fontSize: 16,
-                fontFamily: "Inter_600SemiBold",
-                flex: 1,
-                marginRight: 10,
-              }}
-            >
-              {machineName}
-            </Text>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: tc.bg,
-                paddingHorizontal: 8,
-                paddingVertical: 3,
-                borderRadius: 8,
-                gap: 4,
-              }}
-            >
-              <Feather name={tc.icon as any} size={10} color={tc.color} />
-              <Text
-                style={{
-                  color: tc.color,
-                  fontSize: 10,
-                  fontFamily: "Inter_600SemiBold",
-                }}
-              >
-                {tc.label}
-              </Text>
-            </View>
-          </View>
-
-          {/* Description */}
+      <Pressable
+        onPress={handleItemPress}
+        className="bg-surface border-[0.5px] border-border rounded-2xl p-3.5 mx-5 mb-2.5 shadow-lg shadow-accent/5 active:scale-[0.98]"
+      >
+        {/* Top row: machine name + type badge */}
+        <View className="flex-row items-center justify-between mb-1.5">
           <Text
-            numberOfLines={2}
-            style={{
-              color: "#999",
-              fontSize: 13,
-              fontFamily: "Inter_400Regular",
-              lineHeight: 18,
-              marginBottom: 8,
-            }}
+            numberOfLines={1}
+            className="text-[#F0F0F0] text-base font-inter-semibold flex-1 mr-2.5"
           >
-            {item.descripcion}
+            {machineName}
           </Text>
-
-          {/* Bottom row: técnico + fecha */}
           <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
+            className="flex-row items-center px-2 py-[3px] rounded-lg gap-1"
+            style={{ backgroundColor: tc.bg }}
           >
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              <Feather name="user" size={11} color="#444" />
-              <Text
-                style={{
-                  color: "#666",
-                  fontSize: 11,
-                  fontFamily: "Inter_500Medium",
-                }}
-              >
-                {item.tecnico_responsable}
-              </Text>
-            </View>
+            <Feather name={tc.icon as any} size={10} color={tc.color} />
             <Text
-              style={{
-                color: "#555",
-                fontSize: 11,
-                fontFamily: "Inter_400Regular",
-              }}
+              className="text-[10px] font-inter-semibold"
+              style={{ color: tc.color }}
             >
-              {new Date(item.fecha_realizacion).toLocaleDateString("es-CO", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
+              {tc.label}
             </Text>
           </View>
+        </View>
+
+        {/* Description */}
+        <Text
+          numberOfLines={2}
+          className="text-[#999] text-[13px] font-inter-regular leading-[18px] mb-2"
+        >
+          {item.descripcion}
+        </Text>
+
+        {/* Bottom row: técnico + fecha */}
+        <View className="flex-row justify-between items-center">
+          <View className="flex-row items-center gap-1">
+            <Feather name="user" size={11} color="#444" />
+            <Text className="text-[#666] text-[11px] font-inter-medium">
+              {item.tecnico_responsable}
+            </Text>
+          </View>
+          <Text className="text-[#555] text-[11px] font-inter-regular">
+            {new Date(item.fecha_realizacion).toLocaleDateString("es-CO", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </Text>
         </View>
       </Pressable>
     );
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
+    <View className="flex-1 bg-background">
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
 
       {/* Header */}
-      <View
-        style={{
-          paddingHorizontal: 20,
-          paddingTop: 48,
-          paddingBottom: 16,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
+      <View className="px-5 pt-12 pb-4 flex-row items-center justify-between">
         <View>
-          <Text
-            style={{
-              color: "#F5F5F5",
-              fontSize: 26,
-              fontFamily: "Inter_700Bold",
-            }}
-          >
+          <Text className="text-textPrimary text-[26px] font-inter-bold">
             Mantenimiento
           </Text>
-          <Text
-            style={{
-              color: "#666",
-              fontSize: 14,
-              fontFamily: "Inter_400Regular",
-              marginTop: 2,
-            }}
-          >
+          <Text className="text-textMuted text-sm font-inter-regular mt-0.5">
             {filteredData.length} de {mantenimientos.length} registro{mantenimientos.length !== 1 ? "s" : ""}
           </Text>
         </View>
         <Pressable
           onPress={() => setModalVisible(true)}
-          style={{
-            backgroundColor: "#3B82F6",
-            width: 46,
-            height: 46,
-            borderRadius: 14,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="bg-accent w-[46px] h-[46px] rounded-2xl items-center justify-center active:scale-[0.98]"
         >
           <Feather name="plus" size={22} color="white" />
         </Pressable>
@@ -386,41 +294,26 @@ export default function MantenimientosScreen() {
 
       {/* Filter toggle */}
       {mantenimientos.length > 0 && (
-        <View style={{ paddingHorizontal: 20, paddingBottom: 10 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <View className="px-5 pb-2.5">
+          <View className="flex-row items-center gap-2">
             <Pressable
               onPress={() => setShowFilters(!showFilters)}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 6,
-                backgroundColor: hasActiveFilters ? "rgba(59,130,246,0.12)" : "#1A1A1A",
-                borderWidth: 1,
-                borderColor: hasActiveFilters ? "#3B82F6" : "#2A2A2A",
-                paddingHorizontal: 14,
-                paddingVertical: 8,
-                borderRadius: 12,
-              }}
+              className={`flex-row items-center gap-1.5 px-3.5 py-2 rounded-xl border ${
+                hasActiveFilters
+                  ? "bg-accent/[0.12] border-accent"
+                  : "bg-[#1A1A1A] border-border"
+              }`}
             >
               <Feather name="filter" size={14} color={hasActiveFilters ? "#60A5FA" : "#888"} />
               <Text
-                style={{
-                  color: hasActiveFilters ? "#60A5FA" : "#888",
-                  fontSize: 13,
-                  fontFamily: "Inter_500Medium",
-                }}
+                className={`text-[13px] font-inter-medium ${
+                  hasActiveFilters ? "text-[#60A5FA]" : "text-[#888]"
+                }`}
               >
                 Filtrar
               </Text>
               {hasActiveFilters && (
-                <View
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: 3,
-                    backgroundColor: "#3B82F6",
-                  }}
-                />
+                <View className="w-1.5 h-1.5 rounded-full bg-accent" />
               )}
             </Pressable>
 
@@ -428,18 +321,10 @@ export default function MantenimientosScreen() {
             {filterTecnico && (
               <Pressable
                 onPress={() => setFilterTecnico(null)}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 4,
-                  backgroundColor: "rgba(59,130,246,0.12)",
-                  paddingHorizontal: 10,
-                  paddingVertical: 6,
-                  borderRadius: 10,
-                }}
+                className="flex-row items-center gap-1 bg-accent/[0.12] px-2.5 py-1.5 rounded-[10px]"
               >
                 <Feather name="user" size={11} color="#60A5FA" />
-                <Text style={{ color: "#60A5FA", fontSize: 11, fontFamily: "Inter_500Medium" }}>
+                <Text className="text-[#60A5FA] text-[11px] font-inter-medium">
                   {filterTecnico}
                 </Text>
                 <Feather name="x" size={12} color="#60A5FA" />
@@ -448,18 +333,10 @@ export default function MantenimientosScreen() {
             {filterDate && (
               <Pressable
                 onPress={() => setFilterDate(null)}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 4,
-                  backgroundColor: "rgba(59,130,246,0.12)",
-                  paddingHorizontal: 10,
-                  paddingVertical: 6,
-                  borderRadius: 10,
-                }}
+                className="flex-row items-center gap-1 bg-accent/[0.12] px-2.5 py-1.5 rounded-[10px]"
               >
                 <Feather name="calendar" size={11} color="#60A5FA" />
-                <Text style={{ color: "#60A5FA", fontSize: 11, fontFamily: "Inter_500Medium" }}>
+                <Text className="text-[#60A5FA] text-[11px] font-inter-medium">
                   {filterDate.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" })}
                 </Text>
                 <Feather name="x" size={12} color="#60A5FA" />
@@ -468,7 +345,7 @@ export default function MantenimientosScreen() {
 
             {hasActiveFilters && (
               <Pressable onPress={clearFilters}>
-                <Text style={{ color: "#EF4444", fontSize: 12, fontFamily: "Inter_500Medium" }}>
+                <Text className="text-danger text-xs font-inter-medium">
                   Limpiar
                 </Text>
               </Pressable>
@@ -477,38 +354,12 @@ export default function MantenimientosScreen() {
 
           {/* Collapsible filter panel */}
           {showFilters && (
-            <View
-              style={{
-                backgroundColor: "#141414",
-                borderWidth: 1,
-                borderColor: "#2A2A2A",
-                borderRadius: 14,
-                marginTop: 10,
-                overflow: "hidden",
-              }}
-            >
+            <View className="bg-surface border border-border rounded-2xl mt-2.5 overflow-hidden">
               {/* Por Técnico */}
-              <View style={{ borderBottomWidth: 1, borderBottomColor: "#222" }}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 6,
-                    paddingHorizontal: 14,
-                    paddingTop: 12,
-                    paddingBottom: 8,
-                  }}
-                >
+              <View className="border-b border-[#222]">
+                <View className="flex-row items-center gap-1.5 px-3.5 pt-3 pb-2">
                   <Feather name="user" size={13} color="#555" />
-                  <Text
-                    style={{
-                      color: "#A0A0A0",
-                      fontSize: 11,
-                      fontFamily: "Inter_600SemiBold",
-                      textTransform: "uppercase",
-                      letterSpacing: 0.8,
-                    }}
-                  >
+                  <Text className="text-textSecondary text-[11px] font-inter-semibold uppercase tracking-widest">
                     Por Técnico
                   </Text>
                 </View>
@@ -526,23 +377,19 @@ export default function MantenimientosScreen() {
                           setFilterTecnico(active ? null : t);
                           setShowFilters(false);
                         }}
+                        className="flex-row items-center justify-between px-3.5 py-3"
                         style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          paddingHorizontal: 14,
-                          paddingVertical: 12,
                           backgroundColor: active ? "rgba(59,130,246,0.08)" : "transparent",
                           borderTopWidth: idx > 0 ? 1 : 0,
                           borderTopColor: "#1E1E1E",
                         }}
                       >
                         <Text
-                          style={{
-                            color: active ? "#60A5FA" : "#D0D0D0",
-                            fontSize: 14,
-                            fontFamily: active ? "Inter_500Medium" : "Inter_400Regular",
-                          }}
+                          className={`text-sm ${
+                            active
+                              ? "text-[#60A5FA] font-inter-medium"
+                              : "text-[#D0D0D0] font-inter-regular"
+                          }`}
                         >
                           {t}
                         </Text>
@@ -557,34 +404,18 @@ export default function MantenimientosScreen() {
               <View>
                 <Pressable
                   onPress={() => setShowDatePicker(true)}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    paddingHorizontal: 14,
-                    paddingVertical: 12,
-                  }}
+                  className="flex-row items-center justify-between px-3.5 py-3"
                 >
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <View className="flex-row items-center gap-1.5">
                     <Feather name="calendar" size={13} color="#555" />
-                    <Text
-                      style={{
-                        color: "#A0A0A0",
-                        fontSize: 11,
-                        fontFamily: "Inter_600SemiBold",
-                        textTransform: "uppercase",
-                        letterSpacing: 0.8,
-                      }}
-                    >
+                    <Text className="text-textSecondary text-[11px] font-inter-semibold uppercase tracking-widest">
                       Por Fecha
                     </Text>
                   </View>
                   <Text
-                    style={{
-                      color: filterDate ? "#60A5FA" : "#555",
-                      fontSize: 13,
-                      fontFamily: "Inter_400Regular",
-                    }}
+                    className={`text-[13px] font-inter-regular ${
+                      filterDate ? "text-[#60A5FA]" : "text-[#555]"
+                    }`}
                   >
                     {filterDate
                       ? filterDate.toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" })
@@ -592,7 +423,7 @@ export default function MantenimientosScreen() {
                   </Text>
                 </Pressable>
                 {showDatePicker && (
-                  <View style={{ paddingBottom: 8 }}>
+                  <View className="pb-2">
                     <DateTimePicker
                       value={filterDate || new Date()}
                       mode="date"
@@ -603,16 +434,9 @@ export default function MantenimientosScreen() {
                     {Platform.OS === "ios" && (
                       <Pressable
                         onPress={() => setShowDatePicker(false)}
-                        style={{
-                          alignSelf: "center",
-                          backgroundColor: "#3B82F6",
-                          paddingHorizontal: 24,
-                          paddingVertical: 8,
-                          borderRadius: 10,
-                          marginTop: 4,
-                        }}
+                        className="self-center bg-accent px-6 py-2 rounded-[10px] mt-1"
                       >
-                        <Text style={{ color: "#FFF", fontSize: 13, fontFamily: "Inter_500Medium" }}>
+                        <Text className="text-white text-[13px] font-inter-medium">
                           Confirmar
                         </Text>
                       </Pressable>
@@ -642,68 +466,22 @@ export default function MantenimientosScreen() {
           />
         }
         ListEmptyComponent={
-          <View
-            style={{
-              alignItems: "center",
-              justifyContent: "center",
-              paddingTop: 80,
-            }}
-          >
-            <View
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 40,
-                backgroundColor: "#141414",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 20,
-              }}
-            >
+          <View className="items-center justify-center pt-20">
+            <View className="w-20 h-20 rounded-full bg-surface items-center justify-center mb-5">
               <Feather name="tool" size={36} color="#2A2A2A" />
             </View>
-            <Text
-              style={{
-                color: "#A0A0A0",
-                fontSize: 16,
-                fontFamily: "Inter_500Medium",
-                marginBottom: 6,
-              }}
-            >
+            <Text className="text-textSecondary text-base font-inter-medium mb-1.5">
               No hay mantenimientos
             </Text>
-            <Text
-              style={{
-                color: "#555",
-                fontSize: 14,
-                fontFamily: "Inter_400Regular",
-                marginBottom: 24,
-              }}
-            >
+            <Text className="text-[#555] text-sm font-inter-regular mb-6">
               Registra el primer mantenimiento
             </Text>
             <Pressable
               onPress={() => setModalVisible(true)}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                backgroundColor: "#141414",
-                borderWidth: 1,
-                borderColor: "#2A2A2A",
-                paddingHorizontal: 20,
-                paddingVertical: 12,
-                borderRadius: 14,
-              }}
+              className="flex-row items-center gap-2 bg-surface border border-border px-5 py-3 rounded-2xl active:scale-[0.98]"
             >
               <Feather name="plus" size={18} color="#3B82F6" />
-              <Text
-                style={{
-                  color: "#F5F5F5",
-                  fontSize: 14,
-                  fontFamily: "Inter_500Medium",
-                }}
-              >
+              <Text className="text-textPrimary text-sm font-inter-medium">
                 Nuevo mantenimiento
               </Text>
             </Pressable>

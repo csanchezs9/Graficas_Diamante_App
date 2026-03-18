@@ -108,84 +108,38 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
     }
   };
 
-  // ── Shared styles ──
-  const labelStyle = {
-    color: "#A0A0A0",
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
-    textTransform: "uppercase" as const,
-    letterSpacing: 1,
-    marginBottom: 8,
-  };
-
-  const inputStyle = {
-    backgroundColor: "#1E1E1E",
-    borderWidth: 1,
-    borderColor: "#2A2A2A",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: "#F5F5F5",
-    fontSize: 16,
-    fontFamily: "Inter_400Regular",
-    marginBottom: 20,
-  };
-
   return (
     <Modal visible={visible} animationType="slide" statusBarTranslucent>
-      <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
+      <View className="flex-1 bg-background">
         {/* Header */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingHorizontal: 20,
-            paddingTop: 48,
-            paddingBottom: 16,
-            backgroundColor: "#141414",
-            borderBottomWidth: 1,
-            borderBottomColor: "#2A2A2A",
-          }}
-        >
+        <View className="flex-row items-center justify-between px-5 pt-12 pb-4 bg-surface border-b border-border">
           <Pressable
             onPress={() => {
               resetForm();
               onClose();
             }}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: "#1E1E1E",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
           >
             <Feather name="arrow-left" size={20} color="#A0A0A0" />
           </Pressable>
-          <Text
-            style={{
-              color: "#F5F5F5",
-              fontSize: 18,
-              fontFamily: "Inter_600SemiBold",
-            }}
-          >
+          <Text className="text-textPrimary text-lg font-inter-semibold">
             Nueva Máquina
           </Text>
-          <View style={{ width: 40 }} />
+          <View className="w-10" />
         </View>
 
         {/* Form scrollable */}
         <ScrollView
           ref={scrollRef}
-          style={{ flex: 1 }}
+          className="flex-1"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* ── Nombre ── */}
-          <Text style={labelStyle}>Nombre *</Text>
+          {/* Nombre */}
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Nombre *
+          </Text>
           <TextInput
             value={nombre}
             onChangeText={setNombre}
@@ -194,11 +148,13 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
             returnKeyType="next"
             onSubmitEditing={() => descripcionRef.current?.focus()}
             blurOnSubmit={false}
-            style={inputStyle}
+            className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 
-          {/* ── Descripción ── */}
-          <Text style={labelStyle}>Descripción</Text>
+          {/* Descripcion */}
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Descripción
+          </Text>
           <TextInput
             ref={descripcionRef}
             value={descripcion}
@@ -210,15 +166,14 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
             returnKeyType="next"
             blurOnSubmit={true}
             onSubmitEditing={() => codigoRef.current?.focus()}
-            style={{
-              ...inputStyle,
-              minHeight: 90,
-              textAlignVertical: "top",
-            }}
+            className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5 min-h-[90px]"
+            style={{ textAlignVertical: "top" }}
           />
 
-          {/* ── Código ── */}
-          <Text style={labelStyle}>Código</Text>
+          {/* Codigo */}
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Código
+          </Text>
           <TextInput
             ref={codigoRef}
             value={codigo}
@@ -228,11 +183,13 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
             returnKeyType="next"
             onSubmitEditing={() => ubicacionRef.current?.focus()}
             blurOnSubmit={false}
-            style={inputStyle}
+            className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 
-          {/* ── Ubicación ── */}
-          <Text style={labelStyle}>Ubicación</Text>
+          {/* Ubicacion */}
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Ubicación
+          </Text>
           <TextInput
             ref={ubicacionRef}
             value={ubicacion}
@@ -240,124 +197,62 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
             placeholder="Planta 1"
             placeholderTextColor="#555"
             returnKeyType="done"
-            style={{ ...inputStyle, marginBottom: 24 }}
+            className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-6"
           />
 
-          {/* ── Foto Principal ── */}
-          <Text style={labelStyle}>Foto Principal</Text>
+          {/* Foto Principal */}
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Foto Principal
+          </Text>
           <Pressable
             onPress={pickImage}
-            style={{
-              backgroundColor: "#1E1E1E",
-              borderWidth: 1,
-              borderColor: "#2A2A2A",
-              borderRadius: 14,
-              overflow: "hidden",
-              marginBottom: 24,
-              minHeight: imagenUri ? undefined : 120,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className={`bg-surfaceLight border border-border rounded-2xl overflow-hidden mb-6 items-center justify-center active:scale-[0.98] ${!imagenUri ? "min-h-[120px] border-dashed" : ""}`}
           >
             {imagenUri ? (
-              <View style={{ width: "100%" }}>
+              <View className="w-full">
                 <Image
                   source={{ uri: imagenUri }}
-                  style={{
-                    width: "100%",
-                    height: 180,
-                    borderRadius: 13,
-                  }}
+                  className="w-full h-[180px] rounded-2xl"
                   resizeMode="cover"
                 />
-                {/* Overlay para cambiar */}
-                <View
-                  style={{
-                    position: "absolute",
-                    bottom: 10,
-                    right: 10,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 6,
-                    backgroundColor: "rgba(0,0,0,0.65)",
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    borderRadius: 20,
-                  }}
-                >
+                {/* Overlay to change */}
+                <View className="absolute bottom-2.5 right-2.5 flex-row items-center gap-1.5 bg-black/65 px-3 py-1.5 rounded-full">
                   <Feather name="edit-2" size={12} color="#F5F5F5" />
-                  <Text
-                    style={{
-                      color: "#F5F5F5",
-                      fontSize: 12,
-                      fontFamily: "Inter_500Medium",
-                    }}
-                  >
+                  <Text className="text-textPrimary text-xs font-inter-medium">
                     Cambiar
                   </Text>
                 </View>
               </View>
             ) : (
-              <View style={{ alignItems: "center", gap: 8 }}>
-                <View
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 24,
-                    backgroundColor: "rgba(59,130,246,0.1)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
+              <View className="items-center gap-2">
+                <View className="w-12 h-12 rounded-full bg-accent/10 items-center justify-center">
                   <Feather name="camera" size={22} color="#3B82F6" />
                 </View>
-                <Text
-                  style={{
-                    color: "#A0A0A0",
-                    fontSize: 13,
-                    fontFamily: "Inter_400Regular",
-                  }}
-                >
+                <Text className="text-textSecondary text-[13px] font-inter-regular">
                   Seleccionar foto
                 </Text>
               </View>
             )}
           </Pressable>
 
-          {/* ── Estado (dropdown) ── */}
-          <Text style={labelStyle}>Estado</Text>
-          <View style={{ marginBottom: 24 }}>
+          {/* Estado (dropdown) */}
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Estado
+          </Text>
+          <View className="mb-6">
             <Pressable
               onPress={() => setShowEstadoMenu(!showEstadoMenu)}
-              style={{
-                backgroundColor: "#1E1E1E",
-                borderWidth: 1,
-                borderColor: showEstadoMenu ? "#3B82F6" : "#2A2A2A",
-                borderRadius: 14,
-                paddingHorizontal: 16,
-                paddingVertical: 14,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
+              className={`bg-surfaceLight border ${showEstadoMenu ? "border-accent" : "border-border"} rounded-2xl px-4 py-3.5 flex-row items-center justify-between active:scale-[0.98]`}
             >
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <View className="flex-row items-center gap-2.5">
                 <View
+                  className="w-2 h-2 rounded-full"
                   style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: 4,
                     backgroundColor:
                       estado === "En uso" ? "#22C55E" : "#F59E0B",
                   }}
                 />
-                <Text
-                  style={{
-                    color: "#F5F5F5",
-                    fontSize: 16,
-                    fontFamily: "Inter_400Regular",
-                  }}
-                >
+                <Text className="text-textPrimary text-base font-inter-regular">
                   {estado}
                 </Text>
               </View>
@@ -370,16 +265,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
 
             {/* Dropdown menu */}
             {showEstadoMenu && (
-              <View
-                style={{
-                  backgroundColor: "#1E1E1E",
-                  borderWidth: 1,
-                  borderColor: "#2A2A2A",
-                  borderRadius: 12,
-                  marginTop: 6,
-                  overflow: "hidden",
-                }}
-              >
+              <View className="bg-surfaceLight border border-border rounded-xl mt-1.5 overflow-hidden">
                 {estadoOptions.map((option, index) => {
                   const isSelected = estado === option;
                   return (
@@ -389,12 +275,8 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
                         setEstado(option);
                         setShowEstadoMenu(false);
                       }}
+                      className="px-4 py-3.5 flex-row items-center justify-between active:scale-[0.98]"
                       style={{
-                        paddingHorizontal: 16,
-                        paddingVertical: 14,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "space-between",
                         backgroundColor: isSelected
                           ? "rgba(59,130,246,0.08)"
                           : "transparent",
@@ -402,30 +284,16 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
                         borderTopColor: "#2A2A2A",
                       }}
                     >
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 10,
-                        }}
-                      >
+                      <View className="flex-row items-center gap-2.5">
                         <View
+                          className="w-2 h-2 rounded-full"
                           style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: 4,
                             backgroundColor:
                               option === "En uso" ? "#22C55E" : "#F59E0B",
                           }}
                         />
                         <Text
-                          style={{
-                            color: isSelected ? "#60A5FA" : "#A0A0A0",
-                            fontSize: 15,
-                            fontFamily: isSelected
-                              ? "Inter_500Medium"
-                              : "Inter_400Regular",
-                          }}
+                          className={`text-[15px] ${isSelected ? "font-inter-medium text-accentLight" : "font-inter-regular text-textSecondary"}`}
                         >
                           {option}
                         </Text>
@@ -440,22 +308,13 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
             )}
           </View>
 
-          {/* ── Fecha de Última Inspección ── */}
-          <Text style={labelStyle}>Fecha de Última Inspección</Text>
+          {/* Fecha de Ultima Inspeccion */}
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Fecha de Última Inspección
+          </Text>
           <Pressable
             onPress={() => setShowDatePicker(true)}
-            style={{
-              backgroundColor: "#1E1E1E",
-              borderWidth: 1,
-              borderColor: "#2A2A2A",
-              borderRadius: 14,
-              paddingHorizontal: 16,
-              paddingVertical: 14,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 32,
-            }}
+            className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 flex-row items-center gap-2.5 mb-8 active:scale-[0.98]"
           >
             <Feather
               name="calendar"
@@ -463,11 +322,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
               color={fechaInspeccion ? "#3B82F6" : "#555"}
             />
             <Text
-              style={{
-                color: fechaInspeccion ? "#F5F5F5" : "#555",
-                fontSize: 16,
-                fontFamily: "Inter_400Regular",
-              }}
+              className={`text-base font-inter-regular ${fechaInspeccion ? "text-textPrimary" : "text-[#555]"}`}
             >
               {fechaInspeccion
                 ? fechaInspeccion.toLocaleDateString("es-CO", {
@@ -480,7 +335,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
           </Pressable>
 
           {showDatePicker && (
-            <View style={{ marginBottom: 24 }}>
+            <View className="mb-6">
               <DateTimePicker
                 value={fechaInspeccion || new Date()}
                 mode="date"
@@ -492,22 +347,9 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
               {Platform.OS === "ios" && (
                 <Pressable
                   onPress={() => setShowDatePicker(false)}
-                  style={{
-                    alignSelf: "center",
-                    backgroundColor: "#3B82F6",
-                    paddingHorizontal: 24,
-                    paddingVertical: 10,
-                    borderRadius: 10,
-                    marginTop: 8,
-                  }}
+                  className="self-center bg-accent px-6 py-2.5 rounded-xl mt-2 active:scale-[0.98]"
                 >
-                  <Text
-                    style={{
-                      color: "#FFFFFF",
-                      fontSize: 14,
-                      fontFamily: "Inter_500Medium",
-                    }}
-                  >
+                  <Text className="text-white text-sm font-inter-medium">
                     Confirmar
                   </Text>
                 </Pressable>
@@ -515,27 +357,18 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
             </View>
           )}
 
-          {/* ── Submit ── */}
+          {/* Submit */}
           <Pressable
             onPress={handleSubmit}
             disabled={loading || !nombre.trim()}
-            style={{
-              backgroundColor: nombre.trim() ? "#3B82F6" : "#1E1E1E",
-              paddingVertical: 16,
-              borderRadius: 14,
-              alignItems: "center",
-              opacity: loading ? 0.7 : 1,
-            }}
+            className={`${nombre.trim() ? "bg-accent" : "bg-surfaceLight"} py-4 rounded-2xl items-center active:scale-[0.98]`}
+            style={{ opacity: loading ? 0.7 : 1 }}
           >
             {loading ? (
               <ActivityIndicator color="white" />
             ) : (
               <Text
-                style={{
-                  color: nombre.trim() ? "#FFFFFF" : "#666",
-                  fontSize: 16,
-                  fontFamily: "Inter_600SemiBold",
-                }}
+                className={`text-base font-inter-semibold ${nombre.trim() ? "text-white" : "text-textMuted"}`}
               >
                 Crear Máquina
               </Text>

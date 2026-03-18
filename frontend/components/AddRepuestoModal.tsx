@@ -34,7 +34,7 @@ interface Props {
 }
 
 const tipoOptions = [
-  { value: "mecanico", label: "Mecánico", icon: "settings", color: "#3B82F6" },
+  { value: "mecanico", label: "Mecanico", icon: "settings", color: "#3B82F6" },
   { value: "consumible", label: "Consumible", icon: "box", color: "#F59E0B" },
 ];
 
@@ -123,106 +123,48 @@ export default function AddRepuestoModal({
     }
   };
 
-  const labelStyle = {
-    color: "#A0A0A0",
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
-    textTransform: "uppercase" as const,
-    letterSpacing: 1,
-    marginBottom: 8,
-  };
-
-  const inputStyle = {
-    backgroundColor: "#1E1E1E",
-    borderWidth: 1,
-    borderColor: "#2A2A2A",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: "#F5F5F5",
-    fontSize: 16,
-    fontFamily: "Inter_400Regular",
-    marginBottom: 20,
-  };
-
   return (
     <Modal visible={visible} animationType="slide" statusBarTranslucent>
-      <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
+      <View className="flex-1 bg-background">
         {/* Header */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingHorizontal: 20,
-            paddingTop: 48,
-            paddingBottom: 16,
-            backgroundColor: "#141414",
-            borderBottomWidth: 1,
-            borderBottomColor: "#2A2A2A",
-          }}
-        >
+        <View className="flex-row items-center justify-between px-5 pt-12 pb-4 bg-surface border-b border-border">
           <Pressable
             onPress={onClose}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: "#1E1E1E",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
           >
             <Feather name="x" size={20} color="#A0A0A0" />
           </Pressable>
-          <Text
-            style={{
-              color: "#F5F5F5",
-              fontSize: 18,
-              fontFamily: "Inter_600SemiBold",
-            }}
-          >
+          <Text className="text-textPrimary text-lg font-inter-semibold">
             Nuevo Repuesto
           </Text>
-          <View style={{ width: 40 }} />
+          <View className="w-10" />
         </View>
 
         <ScrollView
-          style={{ flex: 1 }}
+          className="flex-1"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           {/* Tipo — pill selector */}
-          <Text style={labelStyle}>Tipo de Repuesto *</Text>
-          <View
-            style={{
-              flexDirection: "row",
-              gap: 8,
-              marginBottom: 24,
-              flexWrap: "wrap",
-            }}
-          >
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Tipo de Repuesto *
+          </Text>
+          <View className="flex-row gap-2 mb-6 flex-wrap">
             {tipoOptions.map((opt) => {
               const isSelected = tipo === opt.value;
               return (
                 <Pressable
                   key={opt.value}
                   onPress={() => setTipo(opt.value)}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 6,
-                    paddingVertical: 10,
-                    paddingHorizontal: 14,
-                    borderRadius: 12,
-                    borderWidth: 1.5,
-                    borderColor: isSelected ? opt.color : "#2A2A2A",
-                    backgroundColor: isSelected
-                      ? `${opt.color}15`
-                      : "#1E1E1E",
-                  }}
+                  className={`flex-row items-center justify-center gap-1.5 py-2.5 px-3.5 rounded-xl border-[1.5px] active:scale-[0.98] ${
+                    isSelected ? "" : "border-border bg-surfaceLight"
+                  }`}
+                  style={
+                    isSelected
+                      ? { borderColor: opt.color, backgroundColor: `${opt.color}15` }
+                      : undefined
+                  }
                 >
                   <Feather
                     name={opt.icon as any}
@@ -230,13 +172,10 @@ export default function AddRepuestoModal({
                     color={isSelected ? opt.color : "#666"}
                   />
                   <Text
-                    style={{
-                      color: isSelected ? opt.color : "#666",
-                      fontSize: 13,
-                      fontFamily: isSelected
-                        ? "Inter_600SemiBold"
-                        : "Inter_400Regular",
-                    }}
+                    className={`text-[13px] ${
+                      isSelected ? "font-inter-semibold" : "font-inter-regular"
+                    }`}
+                    style={{ color: isSelected ? opt.color : "#666" }}
                   >
                     {opt.label}
                   </Text>
@@ -245,8 +184,10 @@ export default function AddRepuestoModal({
             })}
           </View>
 
-          {/* Mantenimiento selector con búsqueda */}
-          <Text style={labelStyle}>Mantenimiento Asociado *</Text>
+          {/* Mantenimiento selector con busqueda */}
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Mantenimiento Asociado *
+          </Text>
           {selectedMant && !showMantMenu ? (
             <Pressable
               onPress={() => {
@@ -254,37 +195,17 @@ export default function AddRepuestoModal({
                 setMantSearch("");
                 setShowMantMenu(true);
               }}
-              style={{
-                backgroundColor: "#1E1E1E",
-                borderWidth: 1,
-                borderColor: "#3B82F6",
-                borderRadius: 14,
-                paddingHorizontal: 16,
-                paddingVertical: 14,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: 20,
-              }}
+              className="bg-surfaceLight border border-accent rounded-2xl px-4 py-3.5 flex-row items-center justify-between mb-5 active:scale-[0.98]"
             >
-              <View style={{ flex: 1, marginRight: 10 }}>
+              <View className="flex-1 mr-2.5">
                 <Text
-                  style={{
-                    color: "#F5F5F5",
-                    fontSize: 15,
-                    fontFamily: "Inter_500Medium",
-                  }}
+                  className="text-textPrimary text-[15px] font-inter-medium"
                   numberOfLines={1}
                 >
                   {selectedMant.maquinas?.nombre || "—"}
                 </Text>
                 <Text
-                  style={{
-                    color: "#666",
-                    fontSize: 12,
-                    fontFamily: "Inter_400Regular",
-                    marginTop: 2,
-                  }}
+                  className="text-[#666] text-xs font-inter-regular mt-0.5"
                   numberOfLines={1}
                 >
                   {selectedMant.descripcion}
@@ -295,16 +216,9 @@ export default function AddRepuestoModal({
           ) : (
             <>
               <View
-                style={{
-                  backgroundColor: "#1E1E1E",
-                  borderWidth: 1,
-                  borderColor: showMantMenu ? "#3B82F6" : "#2A2A2A",
-                  borderRadius: 14,
-                  paddingHorizontal: 16,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginBottom: showMantMenu ? 6 : 20,
-                }}
+                className={`bg-surfaceLight border rounded-2xl px-4 flex-row items-center ${
+                  showMantMenu ? "border-accent mb-1.5" : "border-border mb-5"
+                }`}
               >
                 <Feather name="search" size={16} color="#666" />
                 <TextInput
@@ -314,16 +228,9 @@ export default function AddRepuestoModal({
                     if (!showMantMenu) setShowMantMenu(true);
                   }}
                   onFocus={() => setShowMantMenu(true)}
-                  placeholder="Buscar por máquina o descripción..."
+                  placeholder="Buscar por maquina o descripcion..."
                   placeholderTextColor="#555"
-                  style={{
-                    flex: 1,
-                    color: "#F5F5F5",
-                    fontSize: 16,
-                    fontFamily: "Inter_400Regular",
-                    paddingVertical: 14,
-                    paddingHorizontal: 10,
-                  }}
+                  className="flex-1 text-textPrimary text-base font-inter-regular py-3.5 px-2.5"
                 />
                 {mantSearch.length > 0 && (
                   <Pressable onPress={() => setMantSearch("")}>
@@ -332,17 +239,7 @@ export default function AddRepuestoModal({
                 )}
               </View>
               {showMantMenu && (
-                <View
-                  style={{
-                    backgroundColor: "#1E1E1E",
-                    borderWidth: 1,
-                    borderColor: "#2A2A2A",
-                    borderRadius: 12,
-                    marginBottom: 20,
-                    maxHeight: 220,
-                    overflow: "hidden",
-                  }}
-                >
+                <View className="bg-surfaceLight border border-border rounded-xl mb-5 max-h-[220px] overflow-hidden">
                   <ScrollView nestedScrollEnabled keyboardShouldPersistTaps="handled">
                     {(() => {
                       const query = mantSearch.toLowerCase().trim();
@@ -360,22 +257,9 @@ export default function AddRepuestoModal({
 
                       if (filtered.length === 0) {
                         return (
-                          <View
-                            style={{
-                              paddingHorizontal: 16,
-                              paddingVertical: 20,
-                              alignItems: "center",
-                            }}
-                          >
+                          <View className="px-4 py-5 items-center">
                             <Feather name="search" size={20} color="#444" />
-                            <Text
-                              style={{
-                                color: "#555",
-                                fontSize: 13,
-                                fontFamily: "Inter_400Regular",
-                                marginTop: 6,
-                              }}
-                            >
+                            <Text className="text-[#555] text-[13px] font-inter-regular mt-1.5">
                               No se encontraron mantenimientos
                             </Text>
                           </View>
@@ -397,44 +281,25 @@ export default function AddRepuestoModal({
                               setMantSearch("");
                               setShowMantMenu(false);
                             }}
+                            className="px-4 py-3.5"
                             style={{
-                              paddingHorizontal: 16,
-                              paddingVertical: 13,
-                              backgroundColor: "transparent",
                               borderTopWidth: idx > 0 ? 1 : 0,
                               borderTopColor: "#2A2A2A",
                             }}
                           >
-                            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                            <View className="flex-row items-center justify-between">
                               <Text
-                                style={{
-                                  color: "#E0E0E0",
-                                  fontSize: 14,
-                                  fontFamily: "Inter_500Medium",
-                                  flex: 1,
-                                }}
+                                className="text-[#E0E0E0] text-sm font-inter-medium flex-1"
                                 numberOfLines={1}
                               >
                                 {machineName}
                               </Text>
-                              <Text
-                                style={{
-                                  color: "#555",
-                                  fontSize: 11,
-                                  fontFamily: "Inter_400Regular",
-                                  marginLeft: 8,
-                                }}
-                              >
+                              <Text className="text-[#555] text-[11px] font-inter-regular ml-2">
                                 {fechaStr}
                               </Text>
                             </View>
                             <Text
-                              style={{
-                                color: "#666",
-                                fontSize: 12,
-                                fontFamily: "Inter_400Regular",
-                                marginTop: 3,
-                              }}
+                              className="text-[#666] text-xs font-inter-regular mt-0.5"
                               numberOfLines={1}
                             >
                               {m.descripcion}
@@ -450,7 +315,9 @@ export default function AddRepuestoModal({
           )}
 
           {/* Nombre */}
-          <Text style={labelStyle}>Nombre *</Text>
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Nombre *
+          </Text>
           <TextInput
             ref={nombreRef}
             value={nombre}
@@ -460,11 +327,13 @@ export default function AddRepuestoModal({
             returnKeyType="next"
             onSubmitEditing={() => cantidadRef.current?.focus()}
             blurOnSubmit={false}
-            style={inputStyle}
+            className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 
           {/* Cantidad */}
-          <Text style={labelStyle}>Cantidad Disponible</Text>
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Cantidad Disponible
+          </Text>
           <TextInput
             ref={cantidadRef}
             value={cantidad}
@@ -475,11 +344,13 @@ export default function AddRepuestoModal({
             returnKeyType="next"
             onSubmitEditing={() => costoRef.current?.focus()}
             blurOnSubmit={false}
-            style={inputStyle}
+            className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 
           {/* Costo Unitario */}
-          <Text style={labelStyle}>Costo Unitario</Text>
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Costo Unitario
+          </Text>
           <TextInput
             ref={costoRef}
             value={costoUnitario}
@@ -490,11 +361,13 @@ export default function AddRepuestoModal({
             returnKeyType="next"
             onSubmitEditing={() => proveedorRef.current?.focus()}
             blurOnSubmit={false}
-            style={inputStyle}
+            className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 
           {/* Proveedor */}
-          <Text style={labelStyle}>Proveedor</Text>
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Proveedor
+          </Text>
           <TextInput
             ref={proveedorRef}
             value={proveedor}
@@ -502,28 +375,19 @@ export default function AddRepuestoModal({
             placeholder="Nombre del proveedor"
             placeholderTextColor="#555"
             returnKeyType="done"
-            style={inputStyle}
+            className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 
           {/* Fecha */}
-          <Text style={labelStyle}>Fecha</Text>
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Fecha
+          </Text>
           <Pressable
             onPress={() => setShowDatePicker(true)}
-            style={{
-              ...inputStyle,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 10,
-            }}
+            className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 flex-row items-center gap-2.5 mb-5 active:scale-[0.98]"
           >
             <Feather name="calendar" size={18} color="#3B82F6" />
-            <Text
-              style={{
-                color: "#F5F5F5",
-                fontSize: 16,
-                fontFamily: "Inter_400Regular",
-              }}
-            >
+            <Text className="text-textPrimary text-base font-inter-regular">
               {fecha.toLocaleDateString("es-CO", {
                 year: "numeric",
                 month: "long",
@@ -532,7 +396,7 @@ export default function AddRepuestoModal({
             </Text>
           </Pressable>
           {showDatePicker && (
-            <View style={{ marginBottom: 20, marginTop: -12 }}>
+            <View className="mb-5 -mt-3">
               <DateTimePicker
                 value={fecha}
                 mode="date"
@@ -544,22 +408,9 @@ export default function AddRepuestoModal({
               {Platform.OS === "ios" && (
                 <Pressable
                   onPress={() => setShowDatePicker(false)}
-                  style={{
-                    alignSelf: "center",
-                    backgroundColor: "#3B82F6",
-                    paddingHorizontal: 24,
-                    paddingVertical: 10,
-                    borderRadius: 10,
-                    marginTop: 8,
-                  }}
+                  className="self-center bg-accent px-6 py-2.5 rounded-xl mt-2 active:scale-[0.98]"
                 >
-                  <Text
-                    style={{
-                      color: "#FFFFFF",
-                      fontSize: 14,
-                      fontFamily: "Inter_500Medium",
-                    }}
-                  >
+                  <Text className="text-white text-sm font-inter-medium">
                     Confirmar
                   </Text>
                 </Pressable>
@@ -568,36 +419,20 @@ export default function AddRepuestoModal({
           )}
 
           {/* Imagen */}
-          <Text style={labelStyle}>Imagen del Repuesto</Text>
-          <View style={{ marginBottom: 32 }}>
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Imagen del Repuesto
+          </Text>
+          <View className="mb-8">
             {imagenUri ? (
-              <View
-                style={{
-                  width: 120,
-                  height: 120,
-                  borderRadius: 12,
-                  overflow: "hidden",
-                  position: "relative",
-                }}
-              >
+              <View className="w-[120px] h-[120px] rounded-xl overflow-hidden relative">
                 <Image
                   source={{ uri: imagenUri }}
-                  style={{ width: 120, height: 120 }}
+                  className="w-[120px] h-[120px]"
                   resizeMode="cover"
                 />
                 <Pressable
                   onPress={() => setImagenUri(null)}
-                  style={{
-                    position: "absolute",
-                    top: 4,
-                    right: 4,
-                    width: 24,
-                    height: 24,
-                    borderRadius: 12,
-                    backgroundColor: "rgba(0,0,0,0.7)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
+                  className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 items-center justify-center active:scale-[0.98]"
                 >
                   <Feather name="x" size={14} color="#FFF" />
                 </Pressable>
@@ -605,27 +440,10 @@ export default function AddRepuestoModal({
             ) : (
               <Pressable
                 onPress={pickImage}
-                style={{
-                  width: 120,
-                  height: 120,
-                  borderRadius: 12,
-                  borderWidth: 1.5,
-                  borderColor: "#2A2A2A",
-                  borderStyle: "dashed",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "#1A1A1A",
-                }}
+                className="w-[120px] h-[120px] rounded-xl border-[1.5px] border-dashed border-border items-center justify-center bg-[#1A1A1A] active:scale-[0.98]"
               >
                 <Feather name="camera" size={22} color="#555" />
-                <Text
-                  style={{
-                    color: "#555",
-                    fontSize: 10,
-                    fontFamily: "Inter_500Medium",
-                    marginTop: 4,
-                  }}
-                >
+                <Text className="text-[#555] text-[10px] font-inter-medium mt-1">
                   Agregar
                 </Text>
               </Pressable>
@@ -636,23 +454,19 @@ export default function AddRepuestoModal({
           <Pressable
             onPress={handleSubmit}
             disabled={loading || !canSubmit}
-            style={{
-              backgroundColor: canSubmit ? "#3B82F6" : "#1E1E1E",
-              paddingVertical: 16,
-              borderRadius: 14,
-              alignItems: "center",
-              opacity: loading ? 0.7 : 1,
-            }}
+            className={`${
+              canSubmit ? "bg-accent" : "bg-surfaceLight"
+            } py-4 rounded-2xl items-center ${
+              loading ? "opacity-70" : ""
+            } active:scale-[0.98]`}
           >
             {loading ? (
               <ActivityIndicator color="white" />
             ) : (
               <Text
-                style={{
-                  color: canSubmit ? "#FFFFFF" : "#666",
-                  fontSize: 16,
-                  fontFamily: "Inter_600SemiBold",
-                }}
+                className={`${
+                  canSubmit ? "text-white" : "text-textMuted"
+                } text-base font-inter-semibold`}
               >
                 Guardar Repuesto
               </Text>

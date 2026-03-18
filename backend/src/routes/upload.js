@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const router = Router();
 
 const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
-const ALLOWED_BUCKETS = ['maquinas', 'mantenimientos', 'repuestos'];
+const ALLOWED_BUCKETS = ['maquinas', 'trabajo', 'repuesto'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 const upload = multer({

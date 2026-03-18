@@ -7,9 +7,11 @@ import {
   Modal,
   ScrollView,
   ActivityIndicator,
+  Image,
   Platform,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
@@ -25,6 +27,8 @@ interface Props {
     descripcion: string;
     costo_total: number;
     tipo: string;
+    fotos_urls_existing: string[];
+    fotos_uris_new: string[];
   }) => Promise<void>;
 }
 
@@ -45,6 +49,8 @@ export default function EditMantenimientoModal({
   const [descripcion, setDescripcion] = useState("");
   const [costoTotal, setCostoTotal] = useState("");
   const [tipo, setTipo] = useState("preventivo");
+  const [fotosUrlsExisting, setFotosUrlsExisting] = useState<string[]>([]);
+  const [fotosUrisNew, setFotosUrisNew] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   const tecnicoRef = useRef<TextInput>(null);
@@ -62,9 +68,36 @@ export default function EditMantenimientoModal({
           : ""
       );
       setTipo(mantenimiento.tipo);
+      setFotosUrlsExisting(mantenimiento.fotos_urls || []);
+      setFotosUrisNew([]);
       setShowDatePicker(false);
     }
   }, [visible, mantenimiento]);
+
+  const totalPhotos = fotosUrlsExisting.length + fotosUrisNew.length;
+
+  const pickImage = async () => {
+    if (totalPhotos >= 3) return;
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setFotosUrisNew((prev) => [...prev, result.assets[0].uri]);
+    }
+  };
+
+  const removeExistingPhoto = (index: number) => {
+    setFotosUrlsExisting((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewPhoto = (index: number) => {
+    setFotosUrisNew((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const onDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === "android") setShowDatePicker(false);
@@ -83,6 +116,8 @@ export default function EditMantenimientoModal({
         descripcion: descripcion.trim(),
         costo_total: parseFloat(costoTotal) || 0,
         tipo,
+        fotos_urls_existing: fotosUrlsExisting,
+        fotos_uris_new: fotosUrisNew,
       });
       onClose();
     } catch {
@@ -92,97 +127,48 @@ export default function EditMantenimientoModal({
     }
   };
 
-  const labelStyle = {
-    color: "#A0A0A0",
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
-    textTransform: "uppercase" as const,
-    letterSpacing: 1,
-    marginBottom: 8,
-  };
-
-  const inputStyle = {
-    backgroundColor: "#1E1E1E",
-    borderWidth: 1,
-    borderColor: "#2A2A2A",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: "#F5F5F5",
-    fontSize: 16,
-    fontFamily: "Inter_400Regular",
-    marginBottom: 20,
-  };
-
   return (
     <Modal visible={visible} animationType="slide" statusBarTranslucent>
-      <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
+      <View className="flex-1 bg-background">
         {/* Header */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingHorizontal: 20,
-            paddingTop: 48,
-            paddingBottom: 16,
-            backgroundColor: "#141414",
-            borderBottomWidth: 1,
-            borderBottomColor: "#2A2A2A",
-          }}
-        >
+        <View className="flex-row items-center justify-between px-5 pt-12 pb-4 bg-surface border-b border-border">
           <Pressable
             onPress={onClose}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: "#1E1E1E",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
           >
             <Feather name="x" size={20} color="#A0A0A0" />
           </Pressable>
-          <Text
-            style={{
-              color: "#F5F5F5",
-              fontSize: 18,
-              fontFamily: "Inter_600SemiBold",
-            }}
-          >
+          <Text className="text-textPrimary text-lg font-inter-semibold">
             Editar Mantenimiento
           </Text>
-          <View style={{ width: 40 }} />
+          <View className="w-10" />
         </View>
 
         <ScrollView
-          style={{ flex: 1 }}
+          className="flex-1"
           contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           {/* Tipo */}
-          <Text style={labelStyle}>Tipo de Mantenimiento</Text>
-          <View style={{ flexDirection: "row", gap: 10, marginBottom: 24 }}>
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Tipo de Mantenimiento
+          </Text>
+          <View className="flex-row gap-2.5 mb-6">
             {tipoOptions.map((opt) => {
               const isSelected = tipo === opt.value;
               return (
                 <Pressable
                   key={opt.value}
                   onPress={() => setTipo(opt.value)}
-                  style={{
-                    flex: 1,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    paddingVertical: 14,
-                    borderRadius: 14,
-                    borderWidth: 1.5,
-                    borderColor: isSelected ? opt.color : "#2A2A2A",
-                    backgroundColor: isSelected ? `${opt.color}15` : "#1E1E1E",
-                  }}
+                  className={`flex-1 flex-row items-center justify-center gap-2 py-3.5 rounded-2xl border-[1.5px] active:scale-[0.98] ${
+                    isSelected ? "" : "border-border bg-surfaceLight"
+                  }`}
+                  style={
+                    isSelected
+                      ? { borderColor: opt.color, backgroundColor: `${opt.color}15` }
+                      : undefined
+                  }
                 >
                   <Feather
                     name={opt.icon as any}
@@ -190,11 +176,10 @@ export default function EditMantenimientoModal({
                     color={isSelected ? opt.color : "#666"}
                   />
                   <Text
-                    style={{
-                      color: isSelected ? opt.color : "#666",
-                      fontSize: 14,
-                      fontFamily: isSelected ? "Inter_600SemiBold" : "Inter_400Regular",
-                    }}
+                    className={`text-sm ${
+                      isSelected ? "font-inter-semibold" : "font-inter-regular"
+                    }`}
+                    style={{ color: isSelected ? opt.color : "#666" }}
                   >
                     {opt.label}
                   </Text>
@@ -204,24 +189,15 @@ export default function EditMantenimientoModal({
           </View>
 
           {/* Fecha */}
-          <Text style={labelStyle}>Fecha de Realización</Text>
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Fecha de Realización
+          </Text>
           <Pressable
             onPress={() => setShowDatePicker(true)}
-            style={{
-              ...inputStyle,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 10,
-            }}
+            className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 flex-row items-center gap-2.5 mb-5 active:scale-[0.98]"
           >
             <Feather name="calendar" size={18} color="#3B82F6" />
-            <Text
-              style={{
-                color: "#F5F5F5",
-                fontSize: 16,
-                fontFamily: "Inter_400Regular",
-              }}
-            >
+            <Text className="text-textPrimary text-base font-inter-regular">
               {fecha.toLocaleDateString("es-CO", {
                 year: "numeric",
                 month: "long",
@@ -230,7 +206,7 @@ export default function EditMantenimientoModal({
             </Text>
           </Pressable>
           {showDatePicker && (
-            <View style={{ marginBottom: 20, marginTop: -12 }}>
+            <View className="mb-5 -mt-3">
               <DateTimePicker
                 value={fecha}
                 mode="date"
@@ -242,16 +218,9 @@ export default function EditMantenimientoModal({
               {Platform.OS === "ios" && (
                 <Pressable
                   onPress={() => setShowDatePicker(false)}
-                  style={{
-                    alignSelf: "center",
-                    backgroundColor: "#3B82F6",
-                    paddingHorizontal: 24,
-                    paddingVertical: 10,
-                    borderRadius: 10,
-                    marginTop: 8,
-                  }}
+                  className="self-center bg-accent px-6 py-2.5 rounded-xl mt-2 active:scale-[0.98]"
                 >
-                  <Text style={{ color: "#FFF", fontSize: 14, fontFamily: "Inter_500Medium" }}>
+                  <Text className="text-white text-sm font-inter-medium">
                     Confirmar
                   </Text>
                 </Pressable>
@@ -260,7 +229,9 @@ export default function EditMantenimientoModal({
           )}
 
           {/* Técnico */}
-          <Text style={labelStyle}>Técnico Responsable</Text>
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Técnico Responsable
+          </Text>
           <TextInput
             ref={tecnicoRef}
             value={tecnico}
@@ -270,11 +241,13 @@ export default function EditMantenimientoModal({
             returnKeyType="next"
             onSubmitEditing={() => descripcionRef.current?.focus()}
             blurOnSubmit={false}
-            style={inputStyle}
+            className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 
           {/* Descripción */}
-          <Text style={labelStyle}>Descripción</Text>
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Descripción
+          </Text>
           <TextInput
             ref={descripcionRef}
             value={descripcion}
@@ -286,15 +259,14 @@ export default function EditMantenimientoModal({
             returnKeyType="next"
             blurOnSubmit
             onSubmitEditing={() => costoRef.current?.focus()}
-            style={{
-              ...inputStyle,
-              minHeight: 90,
-              textAlignVertical: "top",
-            }}
+            className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5 min-h-[90px]"
+            style={{ textAlignVertical: "top" }}
           />
 
           {/* Costo */}
-          <Text style={labelStyle}>Costo Total</Text>
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Costo Total
+          </Text>
           <TextInput
             ref={costoRef}
             value={costoTotal}
@@ -303,30 +275,85 @@ export default function EditMantenimientoModal({
             placeholderTextColor="#555"
             keyboardType="numeric"
             returnKeyType="done"
-            style={inputStyle}
+            className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
+
+          {/* Fotos del trabajo */}
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Fotos del Trabajo (máx. 3)
+          </Text>
+          <View className="flex-row gap-2.5 mb-8 flex-wrap">
+            {/* Existing photos */}
+            {fotosUrlsExisting.map((url, index) => (
+              <View
+                key={`existing-${index}`}
+                className="w-[100px] h-[100px] rounded-xl overflow-hidden relative"
+              >
+                <Image
+                  source={{ uri: url }}
+                  className="w-[100px] h-[100px]"
+                  resizeMode="cover"
+                />
+                <Pressable
+                  onPress={() => removeExistingPhoto(index)}
+                  className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 items-center justify-center active:scale-[0.98]"
+                >
+                  <Feather name="x" size={14} color="#FFF" />
+                </Pressable>
+              </View>
+            ))}
+
+            {/* New photos */}
+            {fotosUrisNew.map((uri, index) => (
+              <View
+                key={`new-${index}`}
+                className="w-[100px] h-[100px] rounded-xl overflow-hidden relative"
+              >
+                <Image
+                  source={{ uri }}
+                  className="w-[100px] h-[100px]"
+                  resizeMode="cover"
+                />
+                <Pressable
+                  onPress={() => removeNewPhoto(index)}
+                  className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 items-center justify-center active:scale-[0.98]"
+                >
+                  <Feather name="x" size={14} color="#FFF" />
+                </Pressable>
+              </View>
+            ))}
+
+            {/* Add photo button */}
+            {totalPhotos < 3 && (
+              <Pressable
+                onPress={pickImage}
+                className="w-[100px] h-[100px] rounded-xl border-[1.5px] border-dashed border-border items-center justify-center bg-[#1A1A1A] active:scale-[0.98]"
+              >
+                <Feather name="camera" size={22} color="#555" />
+                <Text className="text-[#555] text-[10px] font-inter-medium mt-1">
+                  {totalPhotos}/3
+                </Text>
+              </Pressable>
+            )}
+          </View>
 
           {/* Submit */}
           <Pressable
             onPress={handleSubmit}
             disabled={loading || !canSubmit}
-            style={{
-              backgroundColor: canSubmit ? "#3B82F6" : "#1E1E1E",
-              paddingVertical: 16,
-              borderRadius: 14,
-              alignItems: "center",
-              opacity: loading ? 0.7 : 1,
-            }}
+            className={`${
+              canSubmit ? "bg-accent" : "bg-surfaceLight"
+            } py-4 rounded-2xl items-center ${
+              loading ? "opacity-70" : ""
+            } active:scale-[0.98]`}
           >
             {loading ? (
               <ActivityIndicator color="white" />
             ) : (
               <Text
-                style={{
-                  color: canSubmit ? "#FFFFFF" : "#666",
-                  fontSize: 16,
-                  fontFamily: "Inter_600SemiBold",
-                }}
+                className={`${
+                  canSubmit ? "text-white" : "text-textMuted"
+                } text-base font-inter-semibold`}
               >
                 Guardar Cambios
               </Text>

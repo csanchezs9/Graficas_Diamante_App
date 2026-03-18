@@ -141,7 +141,7 @@ export default function MaquinasScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#0A0A0A", alignItems: "center", justifyContent: "center" }}>
+      <View className="flex-1 bg-background items-center justify-center">
         <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
         <ActivityIndicator size="large" color="#3B82F6" />
       </View>
@@ -149,51 +149,22 @@ export default function MaquinasScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
+    <View className="flex-1 bg-background">
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
 
       {/* Header */}
-      <View
-        style={{
-          paddingHorizontal: 20,
-          paddingTop: 48,
-          paddingBottom: 16,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
+      <View className="px-5 pt-12 pb-4 flex-row items-center justify-between">
         <View>
-          <Text
-            style={{
-              color: "#F5F5F5",
-              fontSize: 26,
-              fontFamily: "Inter_700Bold",
-            }}
-          >
+          <Text className="text-textPrimary text-[26px] font-inter-bold">
             Máquinas
           </Text>
-          <Text
-            style={{
-              color: "#666",
-              fontSize: 14,
-              fontFamily: "Inter_400Regular",
-              marginTop: 2,
-            }}
-          >
+          <Text className="text-textMuted text-sm font-inter-regular mt-0.5">
             {maquinas.length} registrada{maquinas.length !== 1 ? "s" : ""}
           </Text>
         </View>
         <Pressable
           onPress={() => setModalVisible(true)}
-          style={{
-            backgroundColor: "#3B82F6",
-            width: 46,
-            height: 46,
-            borderRadius: 14,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="bg-accent w-[46px] h-[46px] rounded-2xl items-center justify-center active:scale-[0.98]"
         >
           <Feather name="plus" size={22} color="white" />
         </Pressable>
@@ -220,62 +191,22 @@ export default function MaquinasScreen() {
           />
         }
         ListEmptyComponent={
-          <View style={{ alignItems: "center", justifyContent: "center", paddingTop: 80 }}>
-            <View
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 40,
-                backgroundColor: "#141414",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 20,
-              }}
-            >
+          <View className="items-center justify-center pt-20">
+            <View className="w-20 h-20 rounded-full bg-surface items-center justify-center mb-5">
               <Feather name="settings" size={36} color="#2A2A2A" />
             </View>
-            <Text
-              style={{
-                color: "#A0A0A0",
-                fontSize: 16,
-                fontFamily: "Inter_500Medium",
-                marginBottom: 6,
-              }}
-            >
+            <Text className="text-textSecondary text-base font-inter-medium mb-1.5">
               No hay máquinas registradas
             </Text>
-            <Text
-              style={{
-                color: "#555",
-                fontSize: 14,
-                fontFamily: "Inter_400Regular",
-                marginBottom: 24,
-              }}
-            >
+            <Text className="text-[#555] text-sm font-inter-regular mb-6">
               Agrega tu primera máquina para empezar
             </Text>
             <Pressable
               onPress={() => setModalVisible(true)}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-                backgroundColor: "#141414",
-                borderWidth: 1,
-                borderColor: "#2A2A2A",
-                paddingHorizontal: 20,
-                paddingVertical: 12,
-                borderRadius: 14,
-              }}
+              className="flex-row items-center gap-2 bg-surface border border-border px-5 py-3 rounded-2xl active:scale-[0.98]"
             >
               <Feather name="plus" size={16} color="#3B82F6" />
-              <Text
-                style={{
-                  color: "#3B82F6",
-                  fontSize: 14,
-                  fontFamily: "Inter_500Medium",
-                }}
-              >
+              <Text className="text-accent text-sm font-inter-medium">
                 Agregar máquina
               </Text>
             </Pressable>

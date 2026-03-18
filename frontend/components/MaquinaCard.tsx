@@ -26,95 +26,37 @@ export default function MaquinaCard({ maquina, onDelete }: Props) {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View className="flex-1">
       <Pressable
         onPress={handlePress}
-        style={({ pressed }) => ({
-          opacity: pressed ? 0.85 : 1,
-          transform: [{ scale: pressed ? 0.97 : 1 }],
-        })}
+        className="active:opacity-90 active:scale-[0.98]"
       >
-        <View
-          style={{
-            backgroundColor: "#161616",
-            borderRadius: 18,
-            overflow: "hidden",
-            // Soft shadow
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 6,
-          }}
-        >
+        <View className="bg-surface rounded-2xl overflow-hidden shadow-lg shadow-accent/5">
           {/* Image section */}
-          <View style={{ position: "relative" }}>
+          <View className="relative">
             {maquina.imagen_url ? (
               <Image
                 source={{ uri: maquina.imagen_url }}
-                style={{
-                  width: "100%",
-                  height: 130,
-                  borderTopLeftRadius: 18,
-                  borderTopRightRadius: 18,
-                }}
+                className="w-full h-[130px] rounded-t-2xl"
                 resizeMode="cover"
               />
             ) : (
-              <View
-                style={{
-                  width: "100%",
-                  height: 100,
-                  backgroundColor: "#1C1C1C",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <View
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
-                    backgroundColor: "rgba(59,130,246,0.08)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
+              <View className="w-full h-[100px] bg-surfaceLight items-center justify-center">
+                <View className="w-11 h-11 rounded-full bg-accent/[0.08] items-center justify-center">
                   <Feather name="settings" size={20} color="#333" />
                 </View>
               </View>
             )}
 
             {/* Estado badge floating on image */}
-            <View
-              style={{
-                position: "absolute",
-                top: 8,
-                left: 8,
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: "rgba(0,0,0,0.7)",
-                paddingHorizontal: 8,
-                paddingVertical: 4,
-                borderRadius: 10,
-                gap: 4,
-              }}
-            >
+            <View className="absolute top-2 left-2 flex-row items-center bg-black/70 px-2 py-1 rounded-[10px] gap-1">
               <View
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: 3,
-                  backgroundColor: badge.dot,
-                }}
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ backgroundColor: badge.dot }}
               />
               <Text
-                style={{
-                  color: badge.text,
-                  fontSize: 10,
-                  fontFamily: "Inter_600SemiBold",
-                  letterSpacing: 0.3,
-                }}
+                className="text-[10px] font-inter-semibold tracking-wide"
+                style={{ color: badge.text }}
               >
                 {badge.label}
               </Text>
@@ -122,16 +64,11 @@ export default function MaquinaCard({ maquina, onDelete }: Props) {
           </View>
 
           {/* Content section */}
-          <View style={{ padding: 12, gap: 6 }}>
+          <View className="p-3 gap-1.5">
             {/* Nombre */}
             <Text
               numberOfLines={1}
-              style={{
-                color: "#F0F0F0",
-                fontSize: 15,
-                fontFamily: "Inter_600SemiBold",
-                letterSpacing: -0.2,
-              }}
+              className="text-[#F0F0F0] text-[15px] font-inter-semibold tracking-tight"
             >
               {maquina.nombre}
             </Text>
@@ -140,38 +77,23 @@ export default function MaquinaCard({ maquina, onDelete }: Props) {
             {maquina.descripcion ? (
               <Text
                 numberOfLines={2}
-                style={{
-                  color: "#777",
-                  fontSize: 12,
-                  fontFamily: "Inter_400Regular",
-                  lineHeight: 16,
-                }}
+                className="text-[#777] text-xs font-inter-regular leading-4"
               >
                 {maquina.descripcion}
               </Text>
             ) : null}
 
             {/* Divider */}
-            <View
-              style={{
-                height: 1,
-                backgroundColor: "#222",
-                marginVertical: 4,
-              }}
-            />
+            <View className="h-px bg-[#222] my-1" />
 
             {/* Footer info */}
-            <View style={{ gap: 4 }}>
+            <View className="gap-1">
               {maquina.codigo ? (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                <View className="flex-row items-center gap-[5px]">
                   <Feather name="hash" size={10} color="#444" />
                   <Text
                     numberOfLines={1}
-                    style={{
-                      color: "#666",
-                      fontSize: 11,
-                      fontFamily: "Inter_500Medium",
-                    }}
+                    className="text-textMuted text-[11px] font-inter-medium"
                   >
                     {maquina.codigo}
                   </Text>
@@ -179,15 +101,11 @@ export default function MaquinaCard({ maquina, onDelete }: Props) {
               ) : null}
 
               {maquina.ubicacion ? (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                <View className="flex-row items-center gap-[5px]">
                   <Feather name="map-pin" size={10} color="#444" />
                   <Text
                     numberOfLines={1}
-                    style={{
-                      color: "#666",
-                      fontSize: 11,
-                      fontFamily: "Inter_500Medium",
-                    }}
+                    className="text-textMuted text-[11px] font-inter-medium"
                   >
                     {maquina.ubicacion}
                   </Text>

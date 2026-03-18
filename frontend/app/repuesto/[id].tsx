@@ -94,15 +94,37 @@ export default function RepuestoDetailScreen() {
     costo_unitario: number;
     proveedor: string;
     fecha: string;
+    imagen_url_existing: string | null;
+    imagen_uri_new: string | null;
   }) => {
     if (!repuesto) return;
-    const updated = await api.updateRepuesto(repuesto.id, editData);
+
+    let imagen_url = editData.imagen_url_existing;
+
+    if (editData.imagen_uri_new) {
+      try {
+        imagen_url = await api.uploadImage(editData.imagen_uri_new, "repuesto");
+      } catch {
+        showToast("warning", "No se pudo subir la imagen");
+      }
+    }
+
+    const updated = await api.updateRepuesto(repuesto.id, {
+      nombre: editData.nombre,
+      tipo: editData.tipo,
+      cantidad_disponible: editData.cantidad_disponible,
+      costo_unitario: editData.costo_unitario,
+      proveedor: editData.proveedor,
+      fecha: editData.fecha,
+      imagen_url: imagen_url || "",
+    });
     setRepuesto(updated);
+    showToast("success", "Repuesto actualizado");
   };
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#0A0A0A", alignItems: "center", justifyContent: "center" }}>
+      <View className="flex-1 bg-background items-center justify-center">
         <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
         <ActivityIndicator size="large" color="#3B82F6" />
       </View>
@@ -111,9 +133,9 @@ export default function RepuestoDetailScreen() {
 
   if (!repuesto) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#0A0A0A", alignItems: "center", justifyContent: "center" }}>
+      <View className="flex-1 bg-background items-center justify-center">
         <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
-        <Text style={{ color: "#A0A0A0", fontSize: 16, fontFamily: "Inter_500Medium" }}>
+        <Text className="text-textSecondary text-base font-inter-medium">
           Repuesto no encontrado
         </Text>
       </View>
@@ -122,65 +144,33 @@ export default function RepuestoDetailScreen() {
 
   const tc = tipoConfig[repuesto.tipo] || tipoConfig.mecanico;
   return (
-    <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
+    <View className="flex-1 bg-background">
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
 
       {/* Header */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: 20,
-          paddingTop: 48,
-          paddingBottom: 16,
-          backgroundColor: "#141414",
-          borderBottomWidth: 1,
-          borderBottomColor: "#2A2A2A",
-        }}
-      >
+      <View className="flex-row items-center justify-between px-5 pt-12 pb-4 bg-surface border-b border-border">
         <Pressable
           onPress={() => router.back()}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: "#1E1E1E",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
         >
           <Feather name="arrow-left" size={20} color="#A0A0A0" />
         </Pressable>
         <Text
-          style={{
-            color: "#F5F5F5",
-            fontSize: 18,
-            fontFamily: "Inter_600SemiBold",
-            flex: 1,
-            textAlign: "center",
-          }}
+          className="text-textPrimary text-lg font-inter-semibold flex-1 text-center"
           numberOfLines={1}
         >
           Repuesto
         </Text>
         <Pressable
           onPress={() => setEditModalVisible(true)}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: "#1E1E1E",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
         >
           <Feather name="edit-2" size={18} color="#3B82F6" />
         </Pressable>
       </View>
 
       <ScrollView
-        style={{ flex: 1 }}
+        className="flex-1"
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
@@ -189,75 +179,36 @@ export default function RepuestoDetailScreen() {
           <Pressable onPress={() => setPreviewImage(repuesto.imagen_url)}>
             <Image
               source={{ uri: repuesto.imagen_url }}
-              style={{
-                width: "100%",
-                height: 220,
-                backgroundColor: "#141414",
-              }}
+              style={{ width: "100%", height: 220 }}
+              className="bg-surface"
               resizeMode="cover"
             />
-            <View
-              style={{
-                position: "absolute",
-                bottom: 12,
-                right: 12,
-                backgroundColor: "rgba(0,0,0,0.6)",
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-                borderRadius: 10,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 4,
-              }}
-            >
+            <View className="absolute bottom-3 right-3 bg-black/60 px-2.5 py-1.5 rounded-[10px] flex-row items-center gap-1">
               <Feather name="maximize-2" size={12} color="#FFF" />
-              <Text style={{ color: "#FFF", fontSize: 11, fontFamily: "Inter_500Medium" }}>
+              <Text className="text-white text-[11px] font-inter-medium">
                 Ver
               </Text>
             </View>
           </Pressable>
         )}
 
-        <View style={{ padding: 20 }}>
+        <View className="p-5">
           {/* Name + type badge */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 16,
-            }}
-          >
+          <View className="flex-row items-center justify-between mb-4">
             <Text
-              style={{
-                color: "#F5F5F5",
-                fontSize: 24,
-                fontFamily: "Inter_700Bold",
-                flex: 1,
-                marginRight: 12,
-              }}
+              className="text-textPrimary text-2xl font-inter-bold flex-1 mr-3"
               numberOfLines={2}
             >
               {repuesto.nombre}
             </Text>
             <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: tc.bg,
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                borderRadius: 20,
-                gap: 6,
-              }}
+              className="flex-row items-center px-3 py-1.5 rounded-[20px] gap-1.5"
+              style={{ backgroundColor: tc.bg }}
             >
               <Feather name={tc.icon as any} size={14} color={tc.color} />
               <Text
-                style={{
-                  color: tc.color,
-                  fontSize: 13,
-                  fontFamily: "Inter_500Medium",
-                }}
+                className="text-[13px] font-inter-medium"
+                style={{ color: tc.color }}
               >
                 {tc.label}
               </Text>
@@ -265,7 +216,7 @@ export default function RepuestoDetailScreen() {
           </View>
 
           {/* Info rows */}
-          <View style={{ gap: 10, marginBottom: 20 }}>
+          <View className="gap-2.5 mb-5">
             <InfoRow
               icon="layers"
               label="Cantidad Disponible"
@@ -316,26 +267,10 @@ export default function RepuestoDetailScreen() {
           {/* Edit button */}
           <Pressable
             onPress={() => setEditModalVisible(true)}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              backgroundColor: "rgba(59,130,246,0.08)",
-              borderWidth: 1,
-              borderColor: "rgba(59,130,246,0.2)",
-              paddingVertical: 14,
-              borderRadius: 14,
-            }}
+            className="flex-row items-center justify-center gap-2 bg-accent/[0.08] border border-accent/20 py-3.5 rounded-2xl active:scale-[0.98]"
           >
             <Feather name="edit-2" size={16} color="#3B82F6" />
-            <Text
-              style={{
-                color: "#3B82F6",
-                fontSize: 15,
-                fontFamily: "Inter_500Medium",
-              }}
-            >
+            <Text className="text-accent text-[15px] font-inter-medium">
               Editar Repuesto
             </Text>
           </Pressable>
@@ -343,27 +278,10 @@ export default function RepuestoDetailScreen() {
           {/* Delete button */}
           <Pressable
             onPress={handleDelete}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              backgroundColor: "rgba(239,68,68,0.08)",
-              borderWidth: 1,
-              borderColor: "rgba(239,68,68,0.2)",
-              paddingVertical: 14,
-              borderRadius: 14,
-              marginTop: 10,
-            }}
+            className="flex-row items-center justify-center gap-2 bg-danger/[0.08] border border-danger/20 py-3.5 rounded-2xl mt-2.5 active:scale-[0.98]"
           >
             <Feather name="trash-2" size={16} color="#EF4444" />
-            <Text
-              style={{
-                color: "#EF4444",
-                fontSize: 15,
-                fontFamily: "Inter_500Medium",
-              }}
-            >
+            <Text className="text-danger text-[15px] font-inter-medium">
               Eliminar Repuesto
             </Text>
           </Pressable>
@@ -379,14 +297,7 @@ export default function RepuestoDetailScreen() {
           statusBarTranslucent
           onRequestClose={() => setPreviewImage(null)}
         >
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(0,0,0,0.95)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+          <View className="flex-1 bg-black/95 items-center justify-center">
             <Pressable
               onPress={() => setPreviewImage(null)}
               style={{
@@ -394,13 +305,8 @@ export default function RepuestoDetailScreen() {
                 top: 50,
                 right: 20,
                 zIndex: 10,
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                backgroundColor: "rgba(255,255,255,0.15)",
-                alignItems: "center",
-                justifyContent: "center",
               }}
+              className="w-10 h-10 rounded-full bg-white/15 items-center justify-center"
             >
               <Feather name="x" size={22} color="#FFFFFF" />
             </Pressable>
@@ -436,17 +342,6 @@ export default function RepuestoDetailScreen() {
   );
 }
 
-// ── Shared ──
-
-const sectionLabel = {
-  color: "#A0A0A0",
-  fontSize: 12,
-  fontFamily: "Inter_500Medium",
-  textTransform: "uppercase" as const,
-  letterSpacing: 1,
-  marginBottom: 8,
-};
-
 function InfoRow({
   icon,
   label,
@@ -457,51 +352,15 @@ function InfoRow({
   value: string | null | undefined;
 }) {
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#141414",
-        borderWidth: 1,
-        borderColor: "#2A2A2A",
-        borderRadius: 14,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        gap: 12,
-      }}
-    >
-      <View
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 10,
-          backgroundColor: "#1E1E1E",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+    <View className="flex-row items-center bg-surface border-[0.5px] border-border rounded-2xl px-4 py-3.5 gap-3">
+      <View className="w-9 h-9 rounded-[10px] bg-surfaceLight items-center justify-center">
         <Feather name={icon} size={16} color="#3B82F6" />
       </View>
-      <View style={{ flex: 1 }}>
-        <Text
-          style={{
-            color: "#666",
-            fontSize: 11,
-            fontFamily: "Inter_500Medium",
-            textTransform: "uppercase",
-            letterSpacing: 0.5,
-            marginBottom: 2,
-          }}
-        >
+      <View className="flex-1">
+        <Text className="text-textMuted text-[11px] font-inter-medium uppercase tracking-wider mb-0.5">
           {label}
         </Text>
-        <Text
-          style={{
-            color: value ? "#F5F5F5" : "#555",
-            fontSize: 15,
-            fontFamily: "Inter_400Regular",
-          }}
-        >
+        <Text className={`text-[15px] font-inter-regular ${value ? "text-textPrimary" : "text-[#555]"}`}>
           {value || "No registrado"}
         </Text>
       </View>

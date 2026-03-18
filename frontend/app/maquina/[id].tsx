@@ -167,7 +167,7 @@ export default function MaquinaDetailScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#0A0A0A", alignItems: "center", justifyContent: "center" }}>
+      <View className="flex-1 bg-background items-center justify-center">
         <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
         <ActivityIndicator size="large" color="#3B82F6" />
       </View>
@@ -176,9 +176,9 @@ export default function MaquinaDetailScreen() {
 
   if (!maquina) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#0A0A0A", alignItems: "center", justifyContent: "center" }}>
+      <View className="flex-1 bg-background items-center justify-center">
         <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
-        <Text style={{ color: "#A0A0A0", fontSize: 16, fontFamily: "Inter_500Medium" }}>
+        <Text className="text-textSecondary text-base font-inter-medium">
           Máquina no encontrada
         </Text>
       </View>
@@ -189,66 +189,33 @@ export default function MaquinaDetailScreen() {
   const badge = estadoConfig[estado] || { bg: "rgba(102,102,102,0.12)", text: "#666", dot: "#666" };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#0A0A0A" }}>
+    <View className="flex-1 bg-background">
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0A" />
 
       {/* Header */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          paddingHorizontal: 20,
-          paddingTop: 48,
-          paddingBottom: 16,
-          backgroundColor: "#141414",
-          borderBottomWidth: 1,
-          borderBottomColor: "#2A2A2A",
-        }}
-      >
+      <View className="flex-row items-center justify-between px-5 pt-12 pb-4 bg-surface border-b border-border">
         <Pressable
           onPress={() => router.back()}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: "#1E1E1E",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
         >
           <Feather name="arrow-left" size={20} color="#A0A0A0" />
         </Pressable>
         <Text
-          style={{
-            color: "#F5F5F5",
-            fontSize: 18,
-            fontFamily: "Inter_600SemiBold",
-            flex: 1,
-            textAlign: "center",
-          }}
+          className="text-textPrimary text-lg font-inter-semibold flex-1 text-center"
           numberOfLines={1}
         >
           Detalle
         </Text>
-        {/* Edit button */}
         <Pressable
           onPress={() => setEditModalVisible(true)}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            backgroundColor: "#1E1E1E",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
         >
           <Feather name="edit-2" size={18} color="#3B82F6" />
         </Pressable>
       </View>
 
       <ScrollView
-        style={{ flex: 1 }}
+        className="flex-1"
         contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
@@ -260,104 +227,42 @@ export default function MaquinaDetailScreen() {
               style={{ width: "100%", height: 220 }}
               resizeMode="cover"
             />
-            <View
-              style={{
-                position: "absolute",
-                bottom: 10,
-                right: 10,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 5,
-                backgroundColor: "rgba(0,0,0,0.6)",
-                paddingHorizontal: 10,
-                paddingVertical: 5,
-                borderRadius: 16,
-              }}
-            >
+            <View className="absolute bottom-2.5 right-2.5 flex-row items-center gap-[5px] bg-black/60 px-2.5 py-[5px] rounded-2xl">
               <Feather name="maximize-2" size={12} color="#F5F5F5" />
-              <Text
-                style={{
-                  color: "#F5F5F5",
-                  fontSize: 11,
-                  fontFamily: "Inter_500Medium",
-                }}
-              >
+              <Text className="text-textPrimary text-[11px] font-inter-medium">
                 Ver
               </Text>
             </View>
           </Pressable>
         ) : (
-          <View
-            style={{
-              width: "100%",
-              height: 160,
-              backgroundColor: "#141414",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+          <View className="w-full h-40 bg-surface items-center justify-center">
             <Feather name="image" size={48} color="#2A2A2A" />
-            <Text
-              style={{
-                color: "#555",
-                fontSize: 13,
-                fontFamily: "Inter_400Regular",
-                marginTop: 8,
-              }}
-            >
+            <Text className="text-[#555] text-[13px] font-inter-regular mt-2">
               Sin imagen
             </Text>
           </View>
         )}
 
-        <View style={{ padding: 20 }}>
+        <View className="p-5">
           {/* Nombre + Estado badge */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 16,
-            }}
-          >
+          <View className="flex-row items-center justify-between mb-4">
             <Text
-              style={{
-                color: "#F5F5F5",
-                fontSize: 24,
-                fontFamily: "Inter_700Bold",
-                flex: 1,
-                marginRight: 12,
-              }}
+              className="text-textPrimary text-2xl font-inter-bold flex-1 mr-3"
               numberOfLines={2}
             >
               {maquina.nombre}
             </Text>
             <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: badge.bg,
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                borderRadius: 20,
-                gap: 6,
-              }}
+              className="flex-row items-center px-3 py-1.5 rounded-[20px] gap-1.5"
+              style={{ backgroundColor: badge.bg }}
             >
               <View
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: 4,
-                  backgroundColor: badge.dot,
-                }}
+                className="w-[7px] h-[7px] rounded-full"
+                style={{ backgroundColor: badge.dot }}
               />
               <Text
-                style={{
-                  color: badge.text,
-                  fontSize: 13,
-                  fontFamily: "Inter_500Medium",
-                  textTransform: "capitalize",
-                }}
+                className="text-[13px] font-inter-medium capitalize"
+                style={{ color: badge.text }}
               >
                 {maquina.estado}
               </Text>
@@ -366,23 +271,18 @@ export default function MaquinaDetailScreen() {
 
           {/* Descripción */}
           {maquina.descripcion ? (
-            <View style={{ marginBottom: 20 }}>
-              <Text style={sectionLabel}>Descripción</Text>
-              <Text
-                style={{
-                  color: "#D0D0D0",
-                  fontSize: 15,
-                  fontFamily: "Inter_400Regular",
-                  lineHeight: 22,
-                }}
-              >
+            <View className="mb-5">
+              <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-1.5">
+                Descripción
+              </Text>
+              <Text className="text-[#D0D0D0] text-[15px] font-inter-regular leading-[22px]">
                 {maquina.descripcion}
               </Text>
             </View>
           ) : null}
 
           {/* Info cards */}
-          <View style={{ gap: 10, marginBottom: 20 }}>
+          <View className="gap-2.5 mb-5">
             <InfoRow icon="hash" label="Código" value={maquina.codigo} />
             <InfoRow icon="map-pin" label="Ubicación" value={maquina.ubicacion} />
             <InfoRow
@@ -413,32 +313,14 @@ export default function MaquinaDetailScreen() {
           </View>
 
           {/* Mantenimientos section */}
-          <View style={{ marginTop: 8 }}>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: 12,
-              }}
-            >
-              <Text style={sectionLabel}>Mantenimientos</Text>
+          <View className="mt-2">
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-1.5">
+                Mantenimientos
+              </Text>
               {mantenimientos.length > 0 && (
-                <View
-                  style={{
-                    backgroundColor: "rgba(59,130,246,0.12)",
-                    paddingHorizontal: 8,
-                    paddingVertical: 2,
-                    borderRadius: 10,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: "#3B82F6",
-                      fontSize: 11,
-                      fontFamily: "Inter_600SemiBold",
-                    }}
-                  >
+                <View className="bg-accent/[0.12] px-2 py-0.5 rounded-[10px]">
+                  <Text className="text-accent text-[11px] font-inter-semibold">
                     {mantenimientos.length}
                   </Text>
                 </View>
@@ -446,28 +328,13 @@ export default function MaquinaDetailScreen() {
             </View>
 
             {mantenimientos.length === 0 ? (
-              <View
-                style={{
-                  backgroundColor: "#141414",
-                  borderWidth: 1,
-                  borderColor: "#2A2A2A",
-                  borderRadius: 14,
-                  padding: 20,
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{
-                    color: "#555",
-                    fontSize: 13,
-                    fontFamily: "Inter_400Regular",
-                  }}
-                >
+              <View className="bg-surface border border-border rounded-2xl p-5 items-center">
+                <Text className="text-[#555] text-[13px] font-inter-regular">
                   Sin mantenimientos registrados
                 </Text>
               </View>
             ) : (
-              <View style={{ gap: 8 }}>
+              <View className="gap-2">
                 {mantenimientos.map((m) => {
                   const tc = tipoConfig[m.tipo] || tipoConfig.preventivo;
                   const foto = m.fotos_urls?.[0] || null;
@@ -505,27 +372,10 @@ export default function MaquinaDetailScreen() {
           {/* Edit button */}
           <Pressable
             onPress={() => setEditModalVisible(true)}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              backgroundColor: "rgba(59,130,246,0.08)",
-              borderWidth: 1,
-              borderColor: "rgba(59,130,246,0.2)",
-              paddingVertical: 14,
-              borderRadius: 14,
-              marginTop: 12,
-            }}
+            className="flex-row items-center justify-center gap-2 bg-accent/[0.08] border border-accent/20 py-3.5 rounded-2xl mt-3 active:scale-[0.98]"
           >
             <Feather name="edit-2" size={16} color="#3B82F6" />
-            <Text
-              style={{
-                color: "#3B82F6",
-                fontSize: 15,
-                fontFamily: "Inter_500Medium",
-              }}
-            >
+            <Text className="text-accent text-[15px] font-inter-medium">
               Editar Máquina
             </Text>
           </Pressable>
@@ -533,27 +383,10 @@ export default function MaquinaDetailScreen() {
           {/* Delete button */}
           <Pressable
             onPress={handleDelete}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              backgroundColor: "rgba(239,68,68,0.08)",
-              borderWidth: 1,
-              borderColor: "rgba(239,68,68,0.2)",
-              paddingVertical: 14,
-              borderRadius: 14,
-              marginTop: 10,
-            }}
+            className="flex-row items-center justify-center gap-2 bg-danger/[0.08] border border-danger/20 py-3.5 rounded-2xl mt-2.5 active:scale-[0.98]"
           >
             <Feather name="trash-2" size={16} color="#EF4444" />
-            <Text
-              style={{
-                color: "#EF4444",
-                fontSize: 15,
-                fontFamily: "Inter_500Medium",
-              }}
-            >
+            <Text className="text-danger text-[15px] font-inter-medium">
               Eliminar Máquina
             </Text>
           </Pressable>
@@ -569,14 +402,7 @@ export default function MaquinaDetailScreen() {
           statusBarTranslucent
           onRequestClose={() => setImagePreviewVisible(false)}
         >
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(0,0,0,0.95)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+          <View className="flex-1 bg-black/95 items-center justify-center">
             <Pressable
               onPress={() => setImagePreviewVisible(false)}
               style={{
@@ -584,13 +410,8 @@ export default function MaquinaDetailScreen() {
                 top: 50,
                 right: 20,
                 zIndex: 10,
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                backgroundColor: "rgba(255,255,255,0.15)",
-                alignItems: "center",
-                justifyContent: "center",
               }}
+              className="w-10 h-10 rounded-full bg-white/15 items-center justify-center"
             >
               <Feather name="x" size={22} color="#FFFFFF" />
             </Pressable>
@@ -626,17 +447,6 @@ export default function MaquinaDetailScreen() {
   );
 }
 
-// ── Shared ──
-
-const sectionLabel = {
-  color: "#A0A0A0",
-  fontSize: 12,
-  fontFamily: "Inter_500Medium",
-  textTransform: "uppercase" as const,
-  letterSpacing: 1,
-  marginBottom: 6,
-};
-
 function InfoRow({
   icon,
   label,
@@ -647,51 +457,15 @@ function InfoRow({
   value: string | null | undefined;
 }) {
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#141414",
-        borderWidth: 1,
-        borderColor: "#2A2A2A",
-        borderRadius: 14,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        gap: 12,
-      }}
-    >
-      <View
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 10,
-          backgroundColor: "#1E1E1E",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+    <View className="flex-row items-center bg-surface border-[0.5px] border-border rounded-2xl px-4 py-3.5 gap-3">
+      <View className="w-9 h-9 rounded-[10px] bg-surfaceLight items-center justify-center">
         <Feather name={icon} size={16} color="#3B82F6" />
       </View>
-      <View style={{ flex: 1 }}>
-        <Text
-          style={{
-            color: "#666",
-            fontSize: 11,
-            fontFamily: "Inter_500Medium",
-            textTransform: "uppercase",
-            letterSpacing: 0.5,
-            marginBottom: 2,
-          }}
-        >
+      <View className="flex-1">
+        <Text className="text-textMuted text-[11px] font-inter-medium uppercase tracking-wider mb-0.5">
           {label}
         </Text>
-        <Text
-          style={{
-            color: value ? "#F5F5F5" : "#555",
-            fontSize: 15,
-            fontFamily: "Inter_400Regular",
-          }}
-        >
+        <Text className={`text-[15px] font-inter-regular ${value ? "text-textPrimary" : "text-[#555]"}`}>
           {value || "No registrado"}
         </Text>
       </View>

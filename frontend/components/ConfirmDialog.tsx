@@ -45,7 +45,7 @@ export default function ConfirmDialog({ visible, title, message, actions, onClos
           opacity,
         }}
       >
-        <Pressable style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }} onPress={onClose} />
+        <Pressable className="absolute inset-0" onPress={onClose} />
         <Animated.View
           style={{
             width: "85%",
@@ -64,64 +64,28 @@ export default function ConfirmDialog({ visible, title, message, actions, onClos
           }}
         >
           {/* Header */}
-          <View style={{ padding: 24, alignItems: "center" }}>
-            <View
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 16,
-                backgroundColor: "rgba(239,68,68,0.12)",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 16,
-              }}
-            >
+          <View className="p-6 items-center">
+            <View className="w-[52px] h-[52px] rounded-2xl bg-[rgba(239,68,68,0.12)] items-center justify-center mb-4">
               <Feather name={icon} size={24} color="#EF4444" />
             </View>
-            <Text
-              style={{
-                color: "#F5F5F5",
-                fontSize: 18,
-                fontFamily: "Inter_600SemiBold",
-                textAlign: "center",
-                marginBottom: 8,
-              }}
-            >
+            <Text className="text-textPrimary text-lg font-inter-semibold text-center mb-2">
               {title}
             </Text>
-            <Text
-              style={{
-                color: "#999",
-                fontSize: 14,
-                fontFamily: "Inter_400Regular",
-                textAlign: "center",
-                lineHeight: 20,
-              }}
-            >
+            <Text className="text-textMuted text-sm font-inter-regular text-center leading-5">
               {message}
             </Text>
           </View>
 
           {/* Actions */}
-          <View
-            style={{
-              flexDirection: "row",
-              borderTopWidth: 1,
-              borderTopColor: "#2A2A2A",
-              width: "100%",
-            }}
-          >
+          <View className="flex-row border-t border-border w-full">
             {actions.map((action, i) => {
               const isDestructive = action.style === "destructive";
               const isCancel = action.style === "cancel";
               return (
                 <View
                   key={i}
-                  style={{
-                    flex: 1,
-                    borderLeftWidth: i > 0 ? 1 : 0,
-                    borderLeftColor: "#2A2A2A",
-                  }}
+                  className="flex-1"
+                  style={i > 0 ? { borderLeftWidth: 1, borderLeftColor: "#2A2A2A" } : undefined}
                 >
                   <Pressable
                     onPress={() => {
@@ -131,18 +95,11 @@ export default function ConfirmDialog({ visible, title, message, actions, onClos
                         action.onPress?.();
                       }
                     }}
-                    style={{
-                      paddingVertical: 16,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
+                    className="py-4 items-center justify-center active:scale-[0.98]"
                   >
                     <Text
-                      style={{
-                        fontSize: 15,
-                        fontFamily: isCancel ? "Inter_400Regular" : "Inter_600SemiBold",
-                        color: isDestructive ? "#EF4444" : isCancel ? "#888" : "#3B82F6",
-                      }}
+                      className={`text-[15px] ${isCancel ? "font-inter-regular" : "font-inter-semibold"}`}
+                      style={{ color: isDestructive ? "#EF4444" : isCancel ? "#888" : "#3B82F6" }}
                     >
                       {action.text}
                     </Text>

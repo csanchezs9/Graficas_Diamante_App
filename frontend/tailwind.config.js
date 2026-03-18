@@ -18,6 +18,12 @@ module.exports = {
         warning: "#F59E0B",
         danger: "#EF4444",
       },
+      fontFamily: {
+        "inter-regular": ["Inter_400Regular"],
+        "inter-medium": ["Inter_500Medium"],
+        "inter-semibold": ["Inter_600SemiBold"],
+        "inter-bold": ["Inter_700Bold"],
+      },
     },
   },
   plugins: [],

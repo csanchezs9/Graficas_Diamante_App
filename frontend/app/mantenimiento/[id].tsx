@@ -7,7 +7,6 @@ import {
   ScrollView,
   Pressable,
   StatusBar,
-  ActivityIndicator,
   Modal,
   Dimensions,
 } from "react-native";
@@ -35,6 +34,7 @@ export default function MantenimientoDetailScreen() {
   const [repuestos, setRepuestos] = useState<Repuesto[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [failedImgs, setFailedImgs] = useState<Set<number>>(new Set());
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [confirm, setConfirm] = useState<{ visible: boolean; title: string; message: string; actions: ConfirmDialogAction[]; icon?: any }>({
     visible: false, title: "", message: "", actions: [],
@@ -59,7 +59,9 @@ export default function MantenimientoDetailScreen() {
         try {
           const reps = await api.getRepuestos(id);
           setRepuestos(reps);
-        } catch {}
+        } catch {
+          showToast("warning", "No se pudieron cargar los repuestos");
+        }
 
         setLoading(false);
       };
@@ -136,6 +138,19 @@ export default function MantenimientoDetailScreen() {
   }) => {
     if (!mantenimiento) return;
 
+    // Delete removed photos from storage
+    const originalUrls = mantenimiento.fotos_urls || [];
+    const removedUrls = originalUrls.filter(
+      (url) => !editData.fotos_urls_existing.includes(url)
+    );
+    for (const url of removedUrls) {
+      try {
+        await api.deleteImage(url);
+      } catch {
+        // Don't block update if old image deletion fails
+      }
+    }
+
     // Upload new photos
     const newUrls: string[] = [];
     for (const uri of editData.fotos_uris_new) {
@@ -143,7 +158,8 @@ export default function MantenimientoDetailScreen() {
         const url = await api.uploadImage(uri, "trabajo");
         newUrls.push(url);
       } catch {
-        showToast("warning", "No se pudo subir una imagen");
+        showToast("error", "No se pudo subir una imagen. Intenta de nuevo.");
+        throw new Error("upload_failed");
       }
     }
 
@@ -199,6 +215,8 @@ export default function MantenimientoDetailScreen() {
       <View className="flex-row items-center justify-between px-5 pt-12 pb-4 bg-surface border-b border-border">
         <Pressable
           onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Volver"
           className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
         >
           <Feather name="arrow-left" size={20} color="#A0A0A0" />
@@ -211,6 +229,8 @@ export default function MantenimientoDetailScreen() {
         </Text>
         <Pressable
           onPress={() => setEditModalVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Editar mantenimiento"
           className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
         >
           <Feather name="edit-2" size={18} color="#3B82F6" />
@@ -305,17 +325,27 @@ export default function MantenimientoDetailScreen() {
                 {mantenimiento.fotos_urls.map((url, i) => (
                   <Pressable
                     key={i}
-                    onPress={() => setPreviewImage(url)}
+                    onPress={() => !failedImgs.has(i) && setPreviewImage(url)}
                     className="flex-1 h-[120px] rounded-xl overflow-hidden"
                   >
-                    <Image
-                      source={{ uri: url }}
-                      style={{ width: "100%", height: 120 }}
-                      resizeMode="cover"
-                    />
-                    <View className="absolute bottom-1.5 right-1.5 bg-black/60 px-1.5 py-[3px] rounded-lg">
-                      <Feather name="maximize-2" size={10} color="#FFF" />
-                    </View>
+                    {failedImgs.has(i) ? (
+                      <View className="w-full h-[120px] bg-surfaceLight items-center justify-center">
+                        <Feather name="image" size={24} color="#333" />
+                        <Text className="text-[#555] text-[10px] font-inter-regular mt-1">Error</Text>
+                      </View>
+                    ) : (
+                      <>
+                        <Image
+                          source={{ uri: url }}
+                          style={{ width: "100%", height: 120 }}
+                          resizeMode="cover"
+                          onError={() => setFailedImgs((prev) => new Set(prev).add(i))}
+                        />
+                        <View className="absolute bottom-1.5 right-1.5 bg-black/60 px-1.5 py-[3px] rounded-lg">
+                          <Feather name="maximize-2" size={10} color="#FFF" />
+                        </View>
+                      </>
+                    )}
                   </Pressable>
                 ))}
               </View>
@@ -365,6 +395,8 @@ export default function MantenimientoDetailScreen() {
           {/* Edit button */}
           <Pressable
             onPress={() => setEditModalVisible(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Editar mantenimiento"
             className="flex-row items-center justify-center gap-2 bg-accent/[0.08] border border-accent/20 py-3.5 rounded-2xl mt-3 active:scale-[0.98]"
           >
             <Feather name="edit-2" size={16} color="#3B82F6" />
@@ -376,6 +408,8 @@ export default function MantenimientoDetailScreen() {
           {/* Delete button */}
           <Pressable
             onPress={handleDelete}
+            accessibilityRole="button"
+            accessibilityLabel="Eliminar mantenimiento"
             className="flex-row items-center justify-center gap-2 bg-danger/[0.08] border border-danger/20 py-3.5 rounded-2xl mt-2.5 active:scale-[0.98]"
           >
             <Feather name="trash-2" size={16} color="#EF4444" />
@@ -398,6 +432,8 @@ export default function MantenimientoDetailScreen() {
           <View className="flex-1 bg-black/95 items-center justify-center">
             <Pressable
               onPress={() => setPreviewImage(null)}
+              accessibilityRole="button"
+              accessibilityLabel="Cerrar vista previa"
               style={{
                 position: "absolute",
                 top: 50,

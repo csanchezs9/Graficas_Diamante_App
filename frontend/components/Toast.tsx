@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { View, Text, Animated, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
@@ -22,6 +22,13 @@ export default function Toast({ visible, type, message, onDismiss, duration = 35
   const translateY = useRef(new Animated.Value(-100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
+  const dismiss = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(translateY, { toValue: -100, duration: 250, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0, duration: 250, useNativeDriver: true }),
+    ]).start(() => onDismiss());
+  }, [translateY, opacity, onDismiss]);
+
   useEffect(() => {
     if (visible) {
       Animated.parallel([
@@ -35,14 +42,7 @@ export default function Toast({ visible, type, message, onDismiss, duration = 35
 
       return () => clearTimeout(timer);
     }
-  }, [visible]);
-
-  const dismiss = () => {
-    Animated.parallel([
-      Animated.timing(translateY, { toValue: -100, duration: 250, useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 0, duration: 250, useNativeDriver: true }),
-    ]).start(() => onDismiss());
-  };
+  }, [visible, duration, dismiss]);
 
   if (!visible) return null;
 

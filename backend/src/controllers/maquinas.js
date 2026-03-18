@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { getHttpStatus } = require('../utils/httpError');
 
 const getById = async (req, res) => {
   const { id } = req.params;
@@ -9,7 +10,7 @@ const getById = async (req, res) => {
     .eq('id', id)
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(getHttpStatus(error)).json({ error: error.message });
   if (!data) return res.status(404).json({ error: 'Máquina no encontrada' });
   res.json(data);
 };
@@ -20,7 +21,7 @@ const getAll = async (req, res) => {
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(getHttpStatus(error)).json({ error: error.message });
   res.json(data);
 };
 
@@ -41,7 +42,7 @@ const create = async (req, res) => {
     .select()
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(getHttpStatus(error)).json({ error: error.message });
   res.status(201).json(data);
 };
 
@@ -55,7 +56,7 @@ const remove = async (req, res) => {
     .select('id', { count: 'exact' })
     .eq('maquina_id', id);
 
-  if (countError) return res.status(500).json({ error: countError.message });
+  if (countError) return res.status(getHttpStatus(countError)).json({ error: countError.message });
 
   if (mants && mants.length > 0) {
     if (!cascade) {
@@ -65,7 +66,9 @@ const remove = async (req, res) => {
       });
     }
 
-    // Cascade: borrar repuestos de cada mantenimiento, luego los mantenimientos
+    // Cascade: borrar repuestos de cada mantenimiento, luego los mantenimientos, luego la máquina.
+    // NOTE: This is not atomic. If a middle step fails, data may be partially deleted.
+    // Ideally this would use a Supabase RPC / database function for transactional safety.
     const mantIds = mants.map(m => m.id);
 
     const { error: repError } = await supabase
@@ -73,14 +76,16 @@ const remove = async (req, res) => {
       .delete()
       .in('mantenimiento_id', mantIds);
 
-    if (repError) return res.status(500).json({ error: repError.message });
+    if (repError) return res.status(getHttpStatus(repError)).json({ error: repError.message });
 
     const { error: mantError } = await supabase
       .from('mantenimientos')
       .delete()
       .eq('maquina_id', id);
 
-    if (mantError) return res.status(500).json({ error: mantError.message });
+    if (mantError) return res.status(500).json({
+      error: 'Eliminación parcial: los repuestos fueron eliminados pero los mantenimientos no. Contacte al administrador.',
+    });
   }
 
   const { error } = await supabase
@@ -88,7 +93,9 @@ const remove = async (req, res) => {
     .delete()
     .eq('id', id);
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(500).json({
+    error: 'Eliminación parcial: los mantenimientos y repuestos fueron eliminados pero la máquina no. Contacte al administrador.',
+  });
   res.json({ message: 'Máquina eliminada' });
 };
 
@@ -103,7 +110,7 @@ const update = async (req, res) => {
     .select()
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(getHttpStatus(error)).json({ error: error.message });
   res.json(data);
 };
 

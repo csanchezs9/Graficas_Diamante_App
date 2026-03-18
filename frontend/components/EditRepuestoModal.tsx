@@ -16,6 +16,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { Repuesto } from "../types/repuesto";
+import { formatCurrency, parseCurrency } from "../utils/currency";
 
 interface Props {
   visible: boolean;
@@ -71,7 +72,7 @@ export default function EditRepuestoModal({
       );
       setCostoUnitario(
         repuesto.costo_unitario > 0
-          ? String(repuesto.costo_unitario)
+          ? formatCurrency(String(repuesto.costo_unitario))
           : ""
       );
       setProveedor(repuesto.proveedor || "");
@@ -117,8 +118,8 @@ export default function EditRepuestoModal({
       await onSubmit({
         nombre: nombre.trim(),
         tipo,
-        cantidad_disponible: parseInt(cantidad) || 0,
-        costo_unitario: parseFloat(costoUnitario) || 0,
+        cantidad_disponible: Math.max(0, parseInt(cantidad) || 0),
+        costo_unitario: Math.max(0, parseCurrency(costoUnitario)),
         proveedor: proveedor.trim(),
         fecha: fecha.toISOString(),
         imagen_url_existing: imagenUrlExisting,
@@ -139,6 +140,8 @@ export default function EditRepuestoModal({
         <View className="flex-row items-center justify-between px-5 pt-12 pb-4 bg-surface border-b border-border">
           <Pressable
             onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel="Cerrar formulario"
             className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
           >
             <Feather name="x" size={20} color="#A0A0A0" />
@@ -206,6 +209,7 @@ export default function EditRepuestoModal({
             returnKeyType="next"
             onSubmitEditing={() => cantidadRef.current?.focus()}
             blurOnSubmit={false}
+            maxLength={100}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 
@@ -233,7 +237,7 @@ export default function EditRepuestoModal({
           <TextInput
             ref={costoRef}
             value={costoUnitario}
-            onChangeText={setCostoUnitario}
+            onChangeText={(text) => setCostoUnitario(formatCurrency(text))}
             placeholder="0"
             placeholderTextColor="#555"
             keyboardType="numeric"
@@ -254,6 +258,7 @@ export default function EditRepuestoModal({
             placeholder="Nombre del proveedor"
             placeholderTextColor="#555"
             returnKeyType="done"
+            maxLength={100}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 

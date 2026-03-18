@@ -16,6 +16,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { Maquina } from "../types/maquina";
+import { formatCurrency, parseCurrency } from "../utils/currency";
 
 interface Props {
   visible: boolean;
@@ -111,7 +112,7 @@ export default function AddMantenimientoModal({
         tecnico_responsable: tecnico.trim(),
         descripcion: descripcion.trim(),
         fotos_uris: fotosUris,
-        costo_total: parseFloat(costoTotal) || 0,
+        costo_total: parseCurrency(costoTotal),
         tipo,
       });
       onClose();
@@ -129,6 +130,8 @@ export default function AddMantenimientoModal({
         <View className="flex-row items-center justify-between px-5 pt-12 pb-4 bg-surface border-b border-border">
           <Pressable
             onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel="Cerrar formulario"
             className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
           >
             <Feather name="x" size={20} color="#A0A0A0" />
@@ -307,6 +310,7 @@ export default function AddMantenimientoModal({
             returnKeyType="next"
             onSubmitEditing={() => descripcionRef.current?.focus()}
             blurOnSubmit={false}
+            maxLength={100}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 
@@ -325,6 +329,7 @@ export default function AddMantenimientoModal({
             returnKeyType="next"
             blurOnSubmit
             onSubmitEditing={() => costoRef.current?.focus()}
+            maxLength={500}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5 min-h-[90px]"
             style={{ textAlignVertical: "top" }}
           />
@@ -336,7 +341,7 @@ export default function AddMantenimientoModal({
           <TextInput
             ref={costoRef}
             value={costoTotal}
-            onChangeText={setCostoTotal}
+            onChangeText={(text) => setCostoTotal(formatCurrency(text))}
             placeholder="0"
             placeholderTextColor="#555"
             keyboardType="numeric"

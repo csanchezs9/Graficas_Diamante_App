@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { getHttpStatus } = require('../utils/httpError');
 
 const getById = async (req, res) => {
   const { id } = req.params;
@@ -9,7 +10,7 @@ const getById = async (req, res) => {
     .eq('id', id)
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(getHttpStatus(error)).json({ error: error.message });
   if (!data) return res.status(404).json({ error: 'Mantenimiento no encontrado' });
   res.json(data);
 };
@@ -28,7 +29,7 @@ const getAll = async (req, res) => {
 
   const { data, error } = await query;
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(getHttpStatus(error)).json({ error: error.message });
   res.json(data);
 };
 
@@ -53,6 +54,16 @@ const create = async (req, res) => {
     return res.status(400).json({ error: `Campos requeridos: ${missing.join(', ')}` });
   }
 
+  if (fotos_urls && !Array.isArray(fotos_urls)) {
+    return res.status(400).json({ error: 'fotos_urls debe ser un array' });
+  }
+
+  if (costo_total !== undefined && costo_total !== null && costo_total !== '') {
+    if (isNaN(Number(costo_total)) || Number(costo_total) < 0) {
+      return res.status(400).json({ error: 'costo_total debe ser un número positivo' });
+    }
+  }
+
   const { data, error } = await supabase
     .from('mantenimientos')
     .insert({
@@ -67,7 +78,7 @@ const create = async (req, res) => {
     .select('*, maquinas(nombre)')
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(getHttpStatus(error)).json({ error: error.message });
   res.status(201).json(data);
 };
 
@@ -81,7 +92,7 @@ const remove = async (req, res) => {
     .select('id', { count: 'exact', head: true })
     .eq('mantenimiento_id', id);
 
-  if (countError) return res.status(500).json({ error: countError.message });
+  if (countError) return res.status(getHttpStatus(countError)).json({ error: countError.message });
 
   if (count > 0) {
     if (!cascade) {
@@ -91,13 +102,15 @@ const remove = async (req, res) => {
       });
     }
 
-    // Cascade: borrar repuestos primero
+    // Cascade: borrar repuestos primero, luego el mantenimiento.
+    // NOTE: This is not atomic. If the second step fails, data may be partially deleted.
+    // Ideally this would use a Supabase RPC / database function for transactional safety.
     const { error: repError } = await supabase
       .from('repuestos')
       .delete()
       .eq('mantenimiento_id', id);
 
-    if (repError) return res.status(500).json({ error: repError.message });
+    if (repError) return res.status(getHttpStatus(repError)).json({ error: repError.message });
   }
 
   const { error } = await supabase
@@ -105,22 +118,41 @@ const remove = async (req, res) => {
     .delete()
     .eq('id', id);
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(500).json({
+    error: 'Eliminación parcial: los repuestos fueron eliminados pero el mantenimiento no. Contacte al administrador.',
+  });
   res.json({ message: 'Mantenimiento eliminado' });
 };
 
 const update = async (req, res) => {
   const { id } = req.params;
-  const fields = req.body;
+  const {
+    fecha_realizacion,
+    tecnico_responsable,
+    descripcion,
+    fotos_urls,
+    costo_total,
+    tipo,
+  } = req.body;
+
+  if (fotos_urls && !Array.isArray(fotos_urls)) {
+    return res.status(400).json({ error: 'fotos_urls debe ser un array' });
+  }
+
+  if (costo_total !== undefined && costo_total !== null && costo_total !== '') {
+    if (isNaN(Number(costo_total)) || Number(costo_total) < 0) {
+      return res.status(400).json({ error: 'costo_total debe ser un número positivo' });
+    }
+  }
 
   const { data, error } = await supabase
     .from('mantenimientos')
-    .update(fields)
+    .update({ fecha_realizacion, tecnico_responsable, descripcion, fotos_urls, costo_total, tipo })
     .eq('id', id)
     .select('*, maquinas(nombre)')
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(getHttpStatus(error)).json({ error: error.message });
   res.json(data);
 };
 

@@ -121,6 +121,52 @@ export function RepuestosListSkeleton() {
   );
 }
 
+export function MetricasSkeleton() {
+  return (
+    <View className="px-5 pt-4">
+      {/* Donut chart area */}
+      <View className="bg-surface border-[0.5px] border-border rounded-2xl p-5 items-center mb-4">
+        <Skeleton width={180} height={180} borderRadius={90} />
+        <View className="flex-row gap-5 mt-4">
+          <Skeleton width={80} height={12} borderRadius={4} />
+          <Skeleton width={80} height={12} borderRadius={4} />
+        </View>
+      </View>
+
+      {/* Money cards */}
+      <View className="flex-row gap-3 mb-4">
+        <View className="flex-1 bg-surface border-[0.5px] border-border rounded-2xl p-4">
+          <Skeleton width={36} height={36} borderRadius={10} />
+          <Skeleton className="w-1/2 mt-3" height={10} borderRadius={4} />
+          <Skeleton className="w-3/4 mt-2" height={20} borderRadius={6} />
+        </View>
+        <View className="flex-1 bg-surface border-[0.5px] border-border rounded-2xl p-4">
+          <Skeleton width={36} height={36} borderRadius={10} />
+          <Skeleton className="w-1/2 mt-3" height={10} borderRadius={4} />
+          <Skeleton className="w-3/4 mt-2" height={20} borderRadius={6} />
+        </View>
+      </View>
+
+      {/* Extra cards */}
+      <View className="flex-row gap-3 mb-4">
+        <View className="flex-1 bg-surface border-[0.5px] border-border rounded-2xl p-4">
+          <Skeleton width={36} height={36} borderRadius={10} />
+          <Skeleton className="w-1/2 mt-3" height={10} borderRadius={4} />
+          <Skeleton className="w-3/4 mt-2" height={20} borderRadius={6} />
+        </View>
+        <View className="flex-1 bg-surface border-[0.5px] border-border rounded-2xl p-4">
+          <Skeleton width={36} height={36} borderRadius={10} />
+          <Skeleton className="w-1/2 mt-3" height={10} borderRadius={4} />
+          <Skeleton className="w-3/4 mt-2" height={20} borderRadius={6} />
+        </View>
+      </View>
+
+      {/* PDF button */}
+      <Skeleton className="w-full mt-2" height={52} borderRadius={16} />
+    </View>
+  );
+}
+
 export function DetailSkeleton({ hasImage = true }: { hasImage?: boolean }) {
   return (
     <View>

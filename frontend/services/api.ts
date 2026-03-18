@@ -4,22 +4,38 @@ import { Repuesto } from "../types/repuesto";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api";
 
+const TIMEOUT_MS = 15000;
+
+function fetchWithTimeout(url: string, options?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  return fetch(url, { ...options, signal: controller.signal })
+    .catch((err) => {
+      if (err.name === "AbortError") {
+        throw new Error("Tiempo de espera agotado. Revisa tu conexión e intenta de nuevo.");
+      }
+      throw err;
+    })
+    .finally(() => clearTimeout(timer));
+}
+
 export const api = {
   // Máquinas
   async getMaquinas(): Promise<Maquina[]> {
-    const res = await fetch(`${API_URL}/maquinas`);
+    const res = await fetchWithTimeout(`${API_URL}/maquinas`);
     if (!res.ok) throw new Error("Error al obtener máquinas");
     return res.json();
   },
 
   async getMaquina(id: string): Promise<Maquina> {
-    const res = await fetch(`${API_URL}/maquinas/${id}`);
+    const res = await fetchWithTimeout(`${API_URL}/maquinas/${id}`);
     if (!res.ok) throw new Error("Error al obtener máquina");
     return res.json();
   },
 
   async createMaquina(data: Omit<Maquina, "id" | "created_at">): Promise<Maquina> {
-    const res = await fetch(`${API_URL}/maquinas`, {
+    const res = await fetchWithTimeout(`${API_URL}/maquinas`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -32,7 +48,7 @@ export const api = {
     const url = cascade
       ? `${API_URL}/maquinas/${id}?cascade=true`
       : `${API_URL}/maquinas/${id}`;
-    const res = await fetch(url, { method: "DELETE" });
+    const res = await fetchWithTimeout(url, { method: "DELETE" });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
       const err: any = new Error(body?.error || "Error al eliminar máquina");
@@ -43,7 +59,7 @@ export const api = {
   },
 
   async updateMaquina(id: string, data: Omit<Maquina, "id" | "created_at">): Promise<Maquina> {
-    const res = await fetch(`${API_URL}/maquinas/${id}`, {
+    const res = await fetchWithTimeout(`${API_URL}/maquinas/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -64,7 +80,7 @@ export const api = {
       type,
     } as unknown as Blob);
 
-    const res = await fetch(`${API_URL}/upload?bucket=${bucket}`, {
+    const res = await fetchWithTimeout(`${API_URL}/upload?bucket=${bucket}`, {
       method: "POST",
       body: formData,
     });
@@ -73,24 +89,32 @@ export const api = {
     return json.url;
   },
 
+  async deleteImage(url: string): Promise<void> {
+    const res = await fetchWithTimeout(
+      `${API_URL}/upload?url=${encodeURIComponent(url)}`,
+      { method: "DELETE" }
+    );
+    if (!res.ok) throw new Error("Error al eliminar imagen");
+  },
+
   // Mantenimientos
   async getMantenimientos(maquina_id?: string): Promise<Mantenimiento[]> {
     const url = maquina_id
       ? `${API_URL}/mantenimientos?maquina_id=${maquina_id}`
       : `${API_URL}/mantenimientos`;
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url);
     if (!res.ok) throw new Error("Error al obtener mantenimientos");
     return res.json();
   },
 
   async getMantenimiento(id: string): Promise<Mantenimiento> {
-    const res = await fetch(`${API_URL}/mantenimientos/${id}`);
+    const res = await fetchWithTimeout(`${API_URL}/mantenimientos/${id}`);
     if (!res.ok) throw new Error("Error al obtener mantenimiento");
     return res.json();
   },
 
   async createMantenimiento(data: Omit<Mantenimiento, "id" | "created_at" | "maquinas">): Promise<Mantenimiento> {
-    const res = await fetch(`${API_URL}/mantenimientos`, {
+    const res = await fetchWithTimeout(`${API_URL}/mantenimientos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -103,7 +127,7 @@ export const api = {
     const url = cascade
       ? `${API_URL}/mantenimientos/${id}?cascade=true`
       : `${API_URL}/mantenimientos/${id}`;
-    const res = await fetch(url, { method: "DELETE" });
+    const res = await fetchWithTimeout(url, { method: "DELETE" });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
       const err: any = new Error(body?.error || "Error al eliminar mantenimiento");
@@ -114,7 +138,7 @@ export const api = {
   },
 
   async updateMantenimiento(id: string, data: Partial<Mantenimiento>): Promise<Mantenimiento> {
-    const res = await fetch(`${API_URL}/mantenimientos/${id}`, {
+    const res = await fetchWithTimeout(`${API_URL}/mantenimientos/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -128,19 +152,19 @@ export const api = {
     const url = mantenimiento_id
       ? `${API_URL}/repuestos?mantenimiento_id=${mantenimiento_id}`
       : `${API_URL}/repuestos`;
-    const res = await fetch(url);
+    const res = await fetchWithTimeout(url);
     if (!res.ok) throw new Error("Error al obtener repuestos");
     return res.json();
   },
 
   async getRepuesto(id: string): Promise<Repuesto> {
-    const res = await fetch(`${API_URL}/repuestos/${id}`);
+    const res = await fetchWithTimeout(`${API_URL}/repuestos/${id}`);
     if (!res.ok) throw new Error("Error al obtener repuesto");
     return res.json();
   },
 
   async createRepuesto(data: Omit<Repuesto, "id" | "created_at" | "mantenimientos">): Promise<Repuesto> {
-    const res = await fetch(`${API_URL}/repuestos`, {
+    const res = await fetchWithTimeout(`${API_URL}/repuestos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -150,7 +174,7 @@ export const api = {
   },
 
   async deleteRepuesto(id: string): Promise<void> {
-    const res = await fetch(`${API_URL}/repuestos/${id}`, {
+    const res = await fetchWithTimeout(`${API_URL}/repuestos/${id}`, {
       method: "DELETE",
     });
     if (!res.ok) {
@@ -160,7 +184,7 @@ export const api = {
   },
 
   async updateRepuesto(id: string, data: Partial<Repuesto>): Promise<Repuesto> {
-    const res = await fetch(`${API_URL}/repuestos/${id}`, {
+    const res = await fetchWithTimeout(`${API_URL}/repuestos/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),

@@ -63,4 +63,46 @@ router.post('/', (req, res, next) => {
   res.json({ url: data.publicUrl });
 });
 
+// DELETE /api/upload?url=<encoded_public_url>
+router.delete('/', async (req, res) => {
+  const { url } = req.query;
+
+  if (!url) {
+    return res.status(400).json({ error: 'Se requiere el parámetro url' });
+  }
+
+  try {
+    // Extract bucket and filename from Supabase public URL
+    // URL format: https://<project>.supabase.co/storage/v1/object/public/<bucket>/<filename>
+    const urlObj = new URL(url);
+    const parts = urlObj.pathname.split('/storage/v1/object/public/');
+    if (parts.length < 2) {
+      return res.status(400).json({ error: 'URL no es una URL válida de Supabase Storage' });
+    }
+
+    const pathAfterPublic = parts[1]; // e.g. "maquinas/abc-123.jpg"
+    const slashIndex = pathAfterPublic.indexOf('/');
+    if (slashIndex === -1) {
+      return res.status(400).json({ error: 'No se pudo extraer bucket y archivo de la URL' });
+    }
+
+    const bucket = pathAfterPublic.substring(0, slashIndex);
+    const filename = pathAfterPublic.substring(slashIndex + 1);
+
+    if (!ALLOWED_BUCKETS.includes(bucket)) {
+      return res.status(400).json({ error: `Bucket no permitido: ${bucket}` });
+    }
+
+    const { error } = await supabase.storage.from(bucket).remove([filename]);
+
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+
+    res.json({ message: 'Imagen eliminada' });
+  } catch (err) {
+    return res.status(400).json({ error: 'URL inválida' });
+  }
+});
+
 module.exports = router;

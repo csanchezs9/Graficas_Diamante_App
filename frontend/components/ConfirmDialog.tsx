@@ -45,7 +45,7 @@ export default function ConfirmDialog({ visible, title, message, actions, onClos
           opacity,
         }}
       >
-        <Pressable className="absolute inset-0" onPress={onClose} />
+        <Pressable className="absolute inset-0" onPress={onClose} accessibilityRole="button" accessibilityLabel="Cerrar diálogo" />
         <Animated.View
           style={{
             width: "85%",
@@ -95,6 +95,8 @@ export default function ConfirmDialog({ visible, title, message, actions, onClos
                         action.onPress?.();
                       }
                     }}
+                    accessibilityRole="button"
+                    accessibilityLabel={action.text}
                     className="py-4 items-center justify-center active:scale-[0.98]"
                   >
                     <Text

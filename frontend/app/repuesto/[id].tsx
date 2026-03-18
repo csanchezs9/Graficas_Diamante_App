@@ -7,7 +7,6 @@ import {
   ScrollView,
   Pressable,
   StatusBar,
-  ActivityIndicator,
   Modal,
   Dimensions,
 } from "react-native";
@@ -32,6 +31,7 @@ export default function RepuestoDetailScreen() {
   const [repuesto, setRepuesto] = useState<Repuesto | null>(null);
   const [loading, setLoading] = useState(true);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [imgError, setImgError] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [confirm, setConfirm] = useState<{ visible: boolean; title: string; message: string; actions: ConfirmDialogAction[]; icon?: any }>({
     visible: false, title: "", message: "", actions: [],
@@ -102,11 +102,21 @@ export default function RepuestoDetailScreen() {
 
     let imagen_url = editData.imagen_url_existing;
 
+    // Delete old image if it's being replaced or removed
+    if (repuesto.imagen_url && (editData.imagen_uri_new || !editData.imagen_url_existing)) {
+      try {
+        await api.deleteImage(repuesto.imagen_url);
+      } catch {
+        // Don't block update if old image deletion fails
+      }
+    }
+
     if (editData.imagen_uri_new) {
       try {
         imagen_url = await api.uploadImage(editData.imagen_uri_new, "repuesto");
       } catch {
-        showToast("warning", "No se pudo subir la imagen");
+        showToast("error", "No se pudo subir la imagen. Intenta de nuevo.");
+        throw new Error("upload_failed");
       }
     }
 
@@ -159,6 +169,8 @@ export default function RepuestoDetailScreen() {
       <View className="flex-row items-center justify-between px-5 pt-12 pb-4 bg-surface border-b border-border">
         <Pressable
           onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Volver"
           className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
         >
           <Feather name="arrow-left" size={20} color="#A0A0A0" />
@@ -171,6 +183,8 @@ export default function RepuestoDetailScreen() {
         </Text>
         <Pressable
           onPress={() => setEditModalVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Editar repuesto"
           className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
         >
           <Feather name="edit-2" size={18} color="#3B82F6" />
@@ -183,13 +197,14 @@ export default function RepuestoDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Image */}
-        {repuesto.imagen_url && (
+        {repuesto.imagen_url && !imgError ? (
           <Pressable onPress={() => setPreviewImage(repuesto.imagen_url)}>
             <Image
               source={{ uri: repuesto.imagen_url }}
               style={{ width: "100%", height: 220 }}
               className="bg-surface"
               resizeMode="cover"
+              onError={() => setImgError(true)}
             />
             <View className="absolute bottom-3 right-3 bg-black/60 px-2.5 py-1.5 rounded-[10px] flex-row items-center gap-1">
               <Feather name="maximize-2" size={12} color="#FFF" />
@@ -198,7 +213,14 @@ export default function RepuestoDetailScreen() {
               </Text>
             </View>
           </Pressable>
-        )}
+        ) : repuesto.imagen_url && imgError ? (
+          <View className="w-full h-40 bg-surface items-center justify-center">
+            <Feather name="image" size={48} color="#2A2A2A" />
+            <Text className="text-[#555] text-[13px] font-inter-regular mt-2">
+              Error al cargar imagen
+            </Text>
+          </View>
+        ) : null}
 
         <View className="p-5">
           {/* Name + type badge */}
@@ -275,6 +297,8 @@ export default function RepuestoDetailScreen() {
           {/* Edit button */}
           <Pressable
             onPress={() => setEditModalVisible(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Editar repuesto"
             className="flex-row items-center justify-center gap-2 bg-accent/[0.08] border border-accent/20 py-3.5 rounded-2xl active:scale-[0.98]"
           >
             <Feather name="edit-2" size={16} color="#3B82F6" />
@@ -286,6 +310,8 @@ export default function RepuestoDetailScreen() {
           {/* Delete button */}
           <Pressable
             onPress={handleDelete}
+            accessibilityRole="button"
+            accessibilityLabel="Eliminar repuesto"
             className="flex-row items-center justify-center gap-2 bg-danger/[0.08] border border-danger/20 py-3.5 rounded-2xl mt-2.5 active:scale-[0.98]"
           >
             <Feather name="trash-2" size={16} color="#EF4444" />
@@ -308,6 +334,8 @@ export default function RepuestoDetailScreen() {
           <View className="flex-1 bg-black/95 items-center justify-center">
             <Pressable
               onPress={() => setPreviewImage(null)}
+              accessibilityRole="button"
+              accessibilityLabel="Cerrar vista previa"
               style={{
                 position: "absolute",
                 top: 50,

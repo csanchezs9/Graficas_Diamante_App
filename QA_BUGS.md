@@ -46,67 +46,41 @@
 
 ## Bugs Altos
 
-### 6. Sin timeout en llamadas fetch
-- **Archivo:** `frontend/services/api.ts` (todos los fetch)
-- **Descripción:** Ninguna llamada al API tiene timeout. En redes lentas o si el servidor no responde, la app se queda colgada indefinidamente mostrando el spinner.
-- **Impacto:** UX degradada. El usuario no sabe si la app está muerta o cargando.
-- **Solución:** Implementar wrapper con `AbortController` y timeout de 10-15 segundos. Mostrar mensaje de error al usuario si se agota el tiempo.
+### ~~6. Sin timeout en llamadas fetch~~ ✅ CORREGIDO
+- **Archivo:** `frontend/services/api.ts`
+- **Fix:** Wrapper `fetchWithTimeout` con `AbortController` y timeout de 15 segundos en todas las llamadas. Mensaje de error claro al usuario si se agota el tiempo.
 
-### 7. Errores de subida de imagen silenciosos
-- **Archivos:**
-  - `frontend/app/(tabs)/index.tsx:79-82`
-  - `frontend/app/(tabs)/mantenimientos.tsx:116-123`
-  - `frontend/app/(tabs)/repuestos.tsx:69-76`
-- **Descripción:** Si `api.uploadImage()` falla, el error se captura pero el formulario se envía de todos modos con `imagen_url: null`. El usuario cree que subió la imagen pero nunca se guardó.
-- **Impacto:** Pérdida de datos. El usuario piensa que la imagen se subió.
-- **Solución:** Mostrar alert al usuario cuando falla el upload y preguntar si desea continuar sin imagen o reintentar.
+### ~~7. Errores de subida de imagen silenciosos~~ ✅ CORREGIDO
+- **Archivos:** `frontend/app/(tabs)/index.tsx`, `mantenimientos.tsx`, `repuestos.tsx`, `maquina/[id].tsx`, `mantenimiento/[id].tsx`, `repuesto/[id].tsx`
+- **Fix:** Si `uploadImage()` falla, se muestra toast de error y se detiene el envío del formulario (throw). El modal permanece abierto con los datos del usuario para reintentar.
 
-### 8. Componentes `<Image>` sin manejo de error
-- **Archivos:**
-  - `frontend/components/LinkedItemCard.tsx:43-53`
-  - `frontend/components/MaquinaCard.tsx:52-62`
-  - `frontend/app/maquina/[id].tsx:195-199`
-  - `frontend/app/mantenimiento/[id].tsx:301-305`
-  - `frontend/app/repuesto/[id].tsx:174-181`
-- **Descripción:** Si la URL de una imagen devuelve 404 o es inválida, el componente `<Image>` muestra un espacio en blanco sin feedback visual.
-- **Impacto:** UI rota. Espacios vacíos sin explicación.
-- **Solución:** Agregar `onError` handler que muestre el fallback icon cuando la imagen falla.
+### ~~8. Componentes `<Image>` sin manejo de error~~ ✅ CORREGIDO
+- **Archivos:** `LinkedItemCard.tsx`, `MaquinaCard.tsx`, `maquina/[id].tsx`, `mantenimiento/[id].tsx`, `repuesto/[id].tsx`
+- **Fix:** `onError` handler en todos los `<Image>`. Cuando la URL falla, se muestra el fallback icon/placeholder en lugar de un espacio vacío.
 
-### 9. Font loading sin manejo de error
-- **Archivo:** `frontend/app/_layout.tsx:8-21`
-- **Descripción:** Si `useFonts()` falla, `fontsLoaded` queda en `false` para siempre y la app se queda en splash screen infinito.
-- **Impacto:** App inutilizable si las fuentes no cargan (ej. sin conexión en primer launch).
-- **Solución:** Capturar `fontError` del hook y renderizar la app con fuentes del sistema como fallback.
+### ~~9. Font loading sin manejo de error~~ ✅ CORREGIDO
+- **Archivo:** `frontend/app/_layout.tsx`
+- **Fix:** Se captura `fontError` del hook `useFonts()`. Si las fuentes fallan, la app renderiza con fuentes del sistema en lugar de quedarse en splash screen infinito.
 
-### 10. Update endpoints aceptan cualquier campo
-- **Archivos:**
-  - `backend/src/controllers/mantenimientos.js:78`
-  - `backend/src/controllers/repuestos.js:80`
-- **Descripción:** Los endpoints de update usan `const fields = req.body` directamente, permitiendo modificar campos del sistema como `id`, `created_at`, o cambiar foreign keys arbitrariamente.
-- **Impacto:** Riesgo de corrupción de datos si se envía un body malformado.
-- **Solución:** Hacer destructuring explícito de solo los campos editables, como ya se hace en `maquinas.js:52-65`.
+### ~~10. Update endpoints aceptan cualquier campo~~ ✅ CORREGIDO
+- **Archivos:** `backend/src/controllers/mantenimientos.js`, `repuestos.js`
+- **Fix:** Destructuring explícito de solo campos editables en ambos endpoints de update, igual que `maquinas.js`. Campos como `id`, `created_at`, `maquina_id`, `mantenimiento_id` ya no se pueden modificar vía update.
 
 ---
 
 ## Bugs Medios
 
-### 11. Comparación de fechas con posible error de timezone
-- **Archivo:** `frontend/app/(tabs)/mantenimientos.tsx:56-63`
-- **Descripción:** El filtro de fecha compara usando `getFullYear()`, `getMonth()`, `getDate()` sobre un `new Date(fecha_realizacion)`. Si el servidor guarda la fecha en UTC y el dispositivo está en UTC-5, una fecha del 1 de enero a las 2am UTC se muestra como 31 de diciembre local.
-- **Impacto:** Un mantenimiento podría no aparecer al filtrar por fecha correcta.
-- **Solución:** Normalizar las fechas a la misma zona horaria antes de comparar, o comparar solo la parte de fecha del string ISO.
+### ~~11. Comparación de fechas con posible error de timezone~~ ✅ CORREGIDO
+- **Archivo:** `frontend/app/(tabs)/mantenimientos.tsx`
+- **Fix:** Se compara directamente la parte de fecha del string ISO (`slice(0, 10)`) en vez de crear objetos `Date` que convierten a timezone local. Elimina el desfase UTC vs local.
 
-### 12. Todos los errores HTTP devuelven 500
-- **Archivos:** Todos los controllers del backend
-- **Descripción:** Sin importar el tipo de error (validación, no encontrado, conflicto), todos retornan `status(500)`. Esto hace difícil debuggear y el frontend no puede distinguir entre un error de servidor y un error del usuario.
-- **Impacto:** Debugging difícil. Frontend no puede mostrar mensajes apropiados.
-- **Solución:** Usar códigos HTTP apropiados: 400 (validación), 404 (no encontrado), 409 (conflicto/dependencias), 500 (error de servidor).
+### ~~12. Todos los errores HTTP devuelven 500~~ ✅ CORREGIDO
+- **Archivos:** `backend/src/utils/httpError.js` (nuevo), todos los controllers
+- **Fix:** Helper `getHttpStatus()` mapea códigos Supabase/PostgreSQL a HTTP: `PGRST116`→404, `22P02`→400, `23503`→409, `23505`→409, `23502`→400. Todos los `res.status(500)` reemplazados por `res.status(getHttpStatus(error))`.
 
-### 13. Sin accesibilidad (a11y)
-- **Archivos:** Toda la app frontend
-- **Descripción:** Ningún componente `<Pressable>` tiene `accessibilityLabel` o `accessibilityRole`. Los inputs de formulario no tienen labels accesibles. Botones de solo icono (back, edit, delete) no tienen descripción para screen readers.
-- **Impacto:** App inutilizable para usuarios con discapacidad visual.
-- **Solución:** Agregar `accessibilityLabel` a todos los `Pressable` y `accessibilityRole="button"`. Asociar labels a inputs con `accessibilityLabel`.
+### ~~13. Sin accesibilidad (a11y)~~ ✅ CORREGIDO
+- **Archivos:** Todos los componentes y pantallas del frontend
+- **Fix:** `accessibilityRole="button"` y `accessibilityLabel` en todos los `Pressable` de solo icono: back, edit, delete, close, add (FAB), preview close, confirm dialog actions. Cards (`MaquinaCard`, `LinkedItemCard`) con labels descriptivos.
 
 ---
 

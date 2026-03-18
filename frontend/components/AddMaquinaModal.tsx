@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -48,6 +48,12 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
   const descripcionRef = useRef<TextInput>(null);
   const codigoRef = useRef<TextInput>(null);
   const ubicacionRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    if (visible) {
+      resetForm();
+    }
+  }, [visible]);
 
   const resetForm = () => {
     setNombre("");
@@ -118,6 +124,8 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
               resetForm();
               onClose();
             }}
+            accessibilityRole="button"
+            accessibilityLabel="Cerrar formulario"
             className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
           >
             <Feather name="arrow-left" size={20} color="#A0A0A0" />
@@ -148,6 +156,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
             returnKeyType="next"
             onSubmitEditing={() => descripcionRef.current?.focus()}
             blurOnSubmit={false}
+            maxLength={100}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 
@@ -166,6 +175,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
             returnKeyType="next"
             blurOnSubmit={true}
             onSubmitEditing={() => codigoRef.current?.focus()}
+            maxLength={500}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5 min-h-[90px]"
             style={{ textAlignVertical: "top" }}
           />
@@ -183,6 +193,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
             returnKeyType="next"
             onSubmitEditing={() => ubicacionRef.current?.focus()}
             blurOnSubmit={false}
+            maxLength={50}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 
@@ -197,6 +208,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
             placeholder="Planta 1"
             placeholderTextColor="#555"
             returnKeyType="done"
+            maxLength={100}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-6"
           />
 

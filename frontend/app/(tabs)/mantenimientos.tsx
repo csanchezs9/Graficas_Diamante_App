@@ -58,14 +58,8 @@ export default function MantenimientosScreen() {
       data = data.filter((m) => m.tecnico_responsable === filterTecnico);
     }
     if (filterDate) {
-      data = data.filter((m) => {
-        const d = new Date(m.fecha_realizacion);
-        return (
-          d.getFullYear() === filterDate.getFullYear() &&
-          d.getMonth() === filterDate.getMonth() &&
-          d.getDate() === filterDate.getDate()
-        );
-      });
+      const filterStr = `${filterDate.getFullYear()}-${String(filterDate.getMonth() + 1).padStart(2, "0")}-${String(filterDate.getDate()).padStart(2, "0")}`;
+      data = data.filter((m) => m.fecha_realizacion.slice(0, 10) === filterStr);
     }
     return data;
   }, [mantenimientos, filterTecnico, filterDate]);
@@ -124,7 +118,8 @@ export default function MantenimientosScreen() {
         const url = await api.uploadImage(uri, "trabajo");
         fotos_urls.push(url);
       } catch {
-        showToast("warning", "No se pudo subir una imagen");
+        showToast("error", "No se pudo subir una imagen. Intenta de nuevo.");
+        throw new Error("upload_failed");
       }
     }
 
@@ -278,6 +273,8 @@ export default function MantenimientosScreen() {
         </View>
         <Pressable
           onPress={() => setModalVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Agregar mantenimiento"
           className="bg-accent w-[46px] h-[46px] rounded-2xl items-center justify-center active:scale-[0.98]"
         >
           <Feather name="plus" size={22} color="white" />
@@ -462,26 +459,52 @@ export default function MantenimientosScreen() {
           />
         }
         ListEmptyComponent={
-          <View className="items-center justify-center pt-20">
-            <View className="w-20 h-20 rounded-full bg-surface items-center justify-center mb-5">
-              <Feather name="tool" size={36} color="#2A2A2A" />
-            </View>
-            <Text className="text-textSecondary text-base font-inter-medium mb-1.5">
-              No hay mantenimientos
-            </Text>
-            <Text className="text-[#555] text-sm font-inter-regular mb-6">
-              Registra el primer mantenimiento
-            </Text>
-            <Pressable
-              onPress={() => setModalVisible(true)}
-              className="flex-row items-center gap-2 bg-surface border border-border px-5 py-3 rounded-2xl active:scale-[0.98]"
-            >
-              <Feather name="plus" size={18} color="#3B82F6" />
-              <Text className="text-textPrimary text-sm font-inter-medium">
-                Nuevo mantenimiento
+          hasActiveFilters ? (
+            <View className="items-center justify-center pt-20">
+              <View className="w-20 h-20 rounded-full bg-surface items-center justify-center mb-5">
+                <Feather name="search" size={36} color="#2A2A2A" />
+              </View>
+              <Text className="text-textSecondary text-base font-inter-medium mb-1.5">
+                Sin resultados para los filtros aplicados
               </Text>
-            </Pressable>
-          </View>
+              <Text className="text-[#555] text-sm font-inter-regular mb-6">
+                Intenta con otros filtros
+              </Text>
+              <Pressable
+                onPress={() => {
+                  setFilterTecnico(null);
+                  setFilterDate(null);
+                }}
+                className="flex-row items-center gap-2 bg-surface border border-border px-5 py-3 rounded-2xl active:scale-[0.98]"
+              >
+                <Feather name="x" size={18} color="#EF4444" />
+                <Text className="text-danger text-sm font-inter-medium">
+                  Limpiar filtros
+                </Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View className="items-center justify-center pt-20">
+              <View className="w-20 h-20 rounded-full bg-surface items-center justify-center mb-5">
+                <Feather name="tool" size={36} color="#2A2A2A" />
+              </View>
+              <Text className="text-textSecondary text-base font-inter-medium mb-1.5">
+                No hay mantenimientos
+              </Text>
+              <Text className="text-[#555] text-sm font-inter-regular mb-6">
+                Registra el primer mantenimiento
+              </Text>
+              <Pressable
+                onPress={() => setModalVisible(true)}
+                className="flex-row items-center gap-2 bg-surface border border-border px-5 py-3 rounded-2xl active:scale-[0.98]"
+              >
+                <Feather name="plus" size={18} color="#3B82F6" />
+                <Text className="text-textPrimary text-sm font-inter-medium">
+                  Nuevo mantenimiento
+                </Text>
+              </Pressable>
+            </View>
+          )
         }
       />
       </>

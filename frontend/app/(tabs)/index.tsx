@@ -123,7 +123,8 @@ export default function MaquinasScreen() {
       try {
         imagen_url = await api.uploadImage(data.imagen_uri);
       } catch {
-        showToast("warning", "No se pudo subir la imagen");
+        showToast("error", "No se pudo subir la imagen. Intenta de nuevo.");
+        throw new Error("upload_failed");
       }
     }
 
@@ -156,6 +157,8 @@ export default function MaquinasScreen() {
         </View>
         <Pressable
           onPress={() => setModalVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Agregar máquina"
           className="bg-accent w-[46px] h-[46px] rounded-2xl items-center justify-center active:scale-[0.98]"
         >
           <Feather name="plus" size={22} color="white" />

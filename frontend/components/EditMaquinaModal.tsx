@@ -137,6 +137,8 @@ export default function EditMaquinaModal({ visible, maquina, onClose, onSubmit }
         <View className="flex-row items-center justify-between px-5 pt-12 pb-4 bg-surface border-b border-border">
           <Pressable
             onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel="Cerrar formulario"
             className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
           >
             <Feather name="x" size={20} color="#A0A0A0" />
@@ -167,6 +169,7 @@ export default function EditMaquinaModal({ visible, maquina, onClose, onSubmit }
             returnKeyType="next"
             onSubmitEditing={() => descripcionRef.current?.focus()}
             blurOnSubmit={false}
+            maxLength={100}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 
@@ -185,6 +188,7 @@ export default function EditMaquinaModal({ visible, maquina, onClose, onSubmit }
             returnKeyType="next"
             blurOnSubmit={true}
             onSubmitEditing={() => codigoRef.current?.focus()}
+            maxLength={500}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5 min-h-[90px]"
             style={{ textAlignVertical: "top" }}
           />
@@ -202,6 +206,7 @@ export default function EditMaquinaModal({ visible, maquina, onClose, onSubmit }
             returnKeyType="next"
             onSubmitEditing={() => ubicacionRef.current?.focus()}
             blurOnSubmit={false}
+            maxLength={50}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 
@@ -216,6 +221,7 @@ export default function EditMaquinaModal({ visible, maquina, onClose, onSubmit }
             placeholder="Planta 1"
             placeholderTextColor="#555"
             returnKeyType="done"
+            maxLength={100}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-6"
           />
 

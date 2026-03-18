@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { getHttpStatus } = require('../utils/httpError');
 
 const getById = async (req, res) => {
   const { id } = req.params;
@@ -9,7 +10,7 @@ const getById = async (req, res) => {
     .eq('id', id)
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(getHttpStatus(error)).json({ error: error.message });
   if (!data) return res.status(404).json({ error: 'Repuesto no encontrado' });
   res.json(data);
 };
@@ -28,7 +29,7 @@ const getAll = async (req, res) => {
 
   const { data, error } = await query;
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(getHttpStatus(error)).json({ error: error.message });
   res.json(data);
 };
 
@@ -53,6 +54,18 @@ const create = async (req, res) => {
     return res.status(400).json({ error: `Campos requeridos: ${missing.join(', ')}` });
   }
 
+  if (cantidad_disponible !== undefined && cantidad_disponible !== null && cantidad_disponible !== '') {
+    if (isNaN(Number(cantidad_disponible)) || Number(cantidad_disponible) < 0) {
+      return res.status(400).json({ error: 'cantidad_disponible debe ser un número positivo' });
+    }
+  }
+
+  if (costo_unitario !== undefined && costo_unitario !== null && costo_unitario !== '') {
+    if (isNaN(Number(costo_unitario)) || Number(costo_unitario) < 0) {
+      return res.status(400).json({ error: 'costo_unitario debe ser un número positivo' });
+    }
+  }
+
   const { data, error } = await supabase
     .from('repuestos')
     .insert({
@@ -68,7 +81,7 @@ const create = async (req, res) => {
     .select('*, mantenimientos(descripcion, maquina_id, maquinas(nombre))')
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(getHttpStatus(error)).json({ error: error.message });
   res.status(201).json(data);
 };
 
@@ -80,22 +93,42 @@ const remove = async (req, res) => {
     .delete()
     .eq('id', id);
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(getHttpStatus(error)).json({ error: error.message });
   res.json({ message: 'Repuesto eliminado' });
 };
 
 const update = async (req, res) => {
   const { id } = req.params;
-  const fields = req.body;
+  const {
+    nombre,
+    tipo,
+    cantidad_disponible,
+    costo_unitario,
+    proveedor,
+    fecha,
+    imagen_url,
+  } = req.body;
+
+  if (cantidad_disponible !== undefined && cantidad_disponible !== null && cantidad_disponible !== '') {
+    if (isNaN(Number(cantidad_disponible)) || Number(cantidad_disponible) < 0) {
+      return res.status(400).json({ error: 'cantidad_disponible debe ser un número positivo' });
+    }
+  }
+
+  if (costo_unitario !== undefined && costo_unitario !== null && costo_unitario !== '') {
+    if (isNaN(Number(costo_unitario)) || Number(costo_unitario) < 0) {
+      return res.status(400).json({ error: 'costo_unitario debe ser un número positivo' });
+    }
+  }
 
   const { data, error } = await supabase
     .from('repuestos')
-    .update(fields)
+    .update({ nombre, tipo, cantidad_disponible, costo_unitario, proveedor, fecha, imagen_url })
     .eq('id', id)
     .select('*, mantenimientos(descripcion, maquina_id, maquinas(nombre))')
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(getHttpStatus(error)).json({ error: error.message });
   res.json(data);
 };
 

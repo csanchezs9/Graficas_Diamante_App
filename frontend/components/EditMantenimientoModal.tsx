@@ -16,6 +16,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { Mantenimiento } from "../types/mantenimiento";
+import { formatCurrency, parseCurrency } from "../utils/currency";
 
 interface Props {
   visible: boolean;
@@ -64,7 +65,7 @@ export default function EditMantenimientoModal({
       setDescripcion(mantenimiento.descripcion);
       setCostoTotal(
         mantenimiento.costo_total > 0
-          ? String(mantenimiento.costo_total)
+          ? formatCurrency(String(mantenimiento.costo_total))
           : ""
       );
       setTipo(mantenimiento.tipo);
@@ -114,7 +115,7 @@ export default function EditMantenimientoModal({
         fecha_realizacion: fecha.toISOString(),
         tecnico_responsable: tecnico.trim(),
         descripcion: descripcion.trim(),
-        costo_total: parseFloat(costoTotal) || 0,
+        costo_total: parseCurrency(costoTotal),
         tipo,
         fotos_urls_existing: fotosUrlsExisting,
         fotos_uris_new: fotosUrisNew,
@@ -134,6 +135,8 @@ export default function EditMantenimientoModal({
         <View className="flex-row items-center justify-between px-5 pt-12 pb-4 bg-surface border-b border-border">
           <Pressable
             onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel="Cerrar formulario"
             className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
           >
             <Feather name="x" size={20} color="#A0A0A0" />
@@ -241,6 +244,7 @@ export default function EditMantenimientoModal({
             returnKeyType="next"
             onSubmitEditing={() => descripcionRef.current?.focus()}
             blurOnSubmit={false}
+            maxLength={100}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 
@@ -259,6 +263,7 @@ export default function EditMantenimientoModal({
             returnKeyType="next"
             blurOnSubmit
             onSubmitEditing={() => costoRef.current?.focus()}
+            maxLength={500}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5 min-h-[90px]"
             style={{ textAlignVertical: "top" }}
           />
@@ -270,7 +275,7 @@ export default function EditMantenimientoModal({
           <TextInput
             ref={costoRef}
             value={costoTotal}
-            onChangeText={setCostoTotal}
+            onChangeText={(text) => setCostoTotal(formatCurrency(text))}
             placeholder="0"
             placeholderTextColor="#555"
             keyboardType="numeric"

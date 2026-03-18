@@ -7,7 +7,6 @@ import {
   ScrollView,
   Pressable,
   StatusBar,
-  ActivityIndicator,
   Modal,
   Dimensions,
 } from "react-native";
@@ -39,6 +38,7 @@ export default function MaquinaDetailScreen() {
   const [maquina, setMaquina] = useState<Maquina | null>(null);
   const [loading, setLoading] = useState(true);
   const [imagePreviewVisible, setImagePreviewVisible] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [mantenimientos, setMantenimientos] = useState<Mantenimiento[]>([]);
   const [confirm, setConfirm] = useState<{ visible: boolean; title: string; message: string; actions: ConfirmDialogAction[]; icon?: any }>({
@@ -88,10 +88,19 @@ export default function MaquinaDetailScreen() {
 
     // Upload new image if one was selected
     if (editData.imagen_uri) {
+      // Delete old image from storage if it exists
+      if (maquina.imagen_url) {
+        try {
+          await api.deleteImage(maquina.imagen_url);
+        } catch {
+          // Don't block update if old image deletion fails
+        }
+      }
       try {
         imagen_url = await api.uploadImage(editData.imagen_uri);
       } catch {
-        showToast("warning", "No se pudo subir la imagen");
+        showToast("error", "No se pudo subir la imagen. Intenta de nuevo.");
+        throw new Error("upload_failed");
       }
     }
 
@@ -204,6 +213,8 @@ export default function MaquinaDetailScreen() {
       <View className="flex-row items-center justify-between px-5 pt-12 pb-4 bg-surface border-b border-border">
         <Pressable
           onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Volver"
           className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
         >
           <Feather name="arrow-left" size={20} color="#A0A0A0" />
@@ -216,6 +227,8 @@ export default function MaquinaDetailScreen() {
         </Text>
         <Pressable
           onPress={() => setEditModalVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Editar máquina"
           className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
         >
           <Feather name="edit-2" size={18} color="#3B82F6" />
@@ -228,12 +241,13 @@ export default function MaquinaDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Imagen (tappable para preview) */}
-        {maquina.imagen_url ? (
+        {maquina.imagen_url && !imgError ? (
           <Pressable onPress={() => setImagePreviewVisible(true)}>
             <Image
               source={{ uri: maquina.imagen_url }}
               style={{ width: "100%", height: 220 }}
               resizeMode="cover"
+              onError={() => setImgError(true)}
             />
             <View className="absolute bottom-2.5 right-2.5 flex-row items-center gap-[5px] bg-black/60 px-2.5 py-[5px] rounded-2xl">
               <Feather name="maximize-2" size={12} color="#F5F5F5" />
@@ -380,6 +394,8 @@ export default function MaquinaDetailScreen() {
           {/* Edit button */}
           <Pressable
             onPress={() => setEditModalVisible(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Editar máquina"
             className="flex-row items-center justify-center gap-2 bg-accent/[0.08] border border-accent/20 py-3.5 rounded-2xl mt-3 active:scale-[0.98]"
           >
             <Feather name="edit-2" size={16} color="#3B82F6" />
@@ -391,6 +407,8 @@ export default function MaquinaDetailScreen() {
           {/* Delete button */}
           <Pressable
             onPress={handleDelete}
+            accessibilityRole="button"
+            accessibilityLabel="Eliminar máquina"
             className="flex-row items-center justify-center gap-2 bg-danger/[0.08] border border-danger/20 py-3.5 rounded-2xl mt-2.5 active:scale-[0.98]"
           >
             <Feather name="trash-2" size={16} color="#EF4444" />
@@ -413,6 +431,8 @@ export default function MaquinaDetailScreen() {
           <View className="flex-1 bg-black/95 items-center justify-center">
             <Pressable
               onPress={() => setImagePreviewVisible(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Cerrar vista previa"
               style={{
                 position: "absolute",
                 top: 50,

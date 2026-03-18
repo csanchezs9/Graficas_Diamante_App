@@ -16,6 +16,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { Mantenimiento } from "../types/mantenimiento";
+import { formatCurrency, parseCurrency } from "../utils/currency";
 
 interface Props {
   visible: boolean;
@@ -109,8 +110,8 @@ export default function AddRepuestoModal({
         mantenimiento_id: mantenimientoId,
         nombre: nombre.trim(),
         tipo,
-        cantidad_disponible: parseInt(cantidad) || 0,
-        costo_unitario: parseFloat(costoUnitario) || 0,
+        cantidad_disponible: Math.max(0, parseInt(cantidad) || 0),
+        costo_unitario: Math.max(0, parseCurrency(costoUnitario)),
         proveedor: proveedor.trim(),
         fecha: fecha.toISOString(),
         imagen_uri: imagenUri,
@@ -130,6 +131,8 @@ export default function AddRepuestoModal({
         <View className="flex-row items-center justify-between px-5 pt-12 pb-4 bg-surface border-b border-border">
           <Pressable
             onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel="Cerrar formulario"
             className="w-10 h-10 rounded-full bg-surfaceLight items-center justify-center active:scale-[0.98]"
           >
             <Feather name="x" size={20} color="#A0A0A0" />
@@ -327,6 +330,7 @@ export default function AddRepuestoModal({
             returnKeyType="next"
             onSubmitEditing={() => cantidadRef.current?.focus()}
             blurOnSubmit={false}
+            maxLength={100}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 
@@ -354,7 +358,7 @@ export default function AddRepuestoModal({
           <TextInput
             ref={costoRef}
             value={costoUnitario}
-            onChangeText={setCostoUnitario}
+            onChangeText={(text) => setCostoUnitario(formatCurrency(text))}
             placeholder="0"
             placeholderTextColor="#555"
             keyboardType="numeric"
@@ -375,6 +379,7 @@ export default function AddRepuestoModal({
             placeholder="Nombre del proveedor"
             placeholderTextColor="#555"
             returnKeyType="done"
+            maxLength={100}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 

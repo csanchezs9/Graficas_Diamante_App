@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { View, Text, Image, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
@@ -26,16 +27,21 @@ export default function LinkedItemCard({
   badgeIcon,
   onPress,
 }: Props) {
+  const [imgError, setImgError] = useState(false);
+
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}${subtitle ? `, ${subtitle}` : ""}`}
       className="flex-row items-center bg-surface border border-border rounded-2xl p-3 gap-3 active:opacity-90 active:scale-[0.98]"
     >
-      {imageUrl ? (
+      {imageUrl && !imgError ? (
         <Image
           source={{ uri: imageUrl }}
           className="w-11 h-11 rounded-[10px] bg-surfaceLight"
           resizeMode="cover"
+          onError={() => setImgError(true)}
         />
       ) : (
         <View className="w-11 h-11 rounded-[10px] bg-surfaceLight items-center justify-center">

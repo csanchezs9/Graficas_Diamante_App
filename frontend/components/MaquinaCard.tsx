@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { View, Text, Image, Pressable } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -15,6 +16,7 @@ const estadoConfig: Record<string, { bg: string; text: string; dot: string; labe
 
 export default function MaquinaCard({ maquina, onDelete }: Props) {
   const router = useRouter();
+  const [imgError, setImgError] = useState(false);
   const estado = maquina.estado?.toLowerCase() || "";
   const badge = estadoConfig[estado] || { bg: "rgba(102,102,102,0.15)", text: "#999", dot: "#666", label: maquina.estado || "?" };
 
@@ -29,16 +31,19 @@ export default function MaquinaCard({ maquina, onDelete }: Props) {
     <View className="flex-1">
       <Pressable
         onPress={handlePress}
+        accessibilityRole="button"
+        accessibilityLabel={`Máquina ${maquina.nombre}, estado ${badge.label}`}
         className="active:opacity-90 active:scale-[0.98]"
       >
         <View className="bg-surface rounded-2xl overflow-hidden shadow-lg shadow-accent/5">
           {/* Image section */}
           <View className="relative">
-            {maquina.imagen_url ? (
+            {maquina.imagen_url && !imgError ? (
               <Image
                 source={{ uri: maquina.imagen_url }}
                 className="w-full h-[130px] rounded-t-2xl"
                 resizeMode="cover"
+                onError={() => setImgError(true)}
               />
             ) : (
               <View className="w-full h-[100px] bg-surfaceLight items-center justify-center">

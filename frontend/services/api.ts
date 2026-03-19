@@ -4,7 +4,9 @@ import { Repuesto } from "../types/repuesto";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api";
 
-const TIMEOUT_MS = 15000;
+const TIMEOUT_MS = 45000;       // 45s to handle Render cold starts (~28s)
+const RETRY_ATTEMPTS = 2;
+const RETRY_DELAY_MS = 2000;
 
 function fetchWithTimeout(url: string, options?: RequestInit): Promise<Response> {
   const controller = new AbortController();
@@ -20,16 +22,32 @@ function fetchWithTimeout(url: string, options?: RequestInit): Promise<Response>
     .finally(() => clearTimeout(timer));
 }
 
+async function fetchWithRetry(url: string, options?: RequestInit): Promise<Response> {
+  for (let attempt = 0; attempt <= RETRY_ATTEMPTS; attempt++) {
+    try {
+      const res = await fetchWithTimeout(url, options);
+      return res;
+    } catch (err) {
+      if (attempt < RETRY_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new Error("Error de conexión");
+}
+
 export const api = {
   // Máquinas
   async getMaquinas(): Promise<Maquina[]> {
-    const res = await fetchWithTimeout(`${API_URL}/maquinas`);
+    const res = await fetchWithRetry(`${API_URL}/maquinas`);
     if (!res.ok) throw new Error("Error al obtener máquinas");
     return res.json();
   },
 
   async getMaquina(id: string): Promise<Maquina> {
-    const res = await fetchWithTimeout(`${API_URL}/maquinas/${id}`);
+    const res = await fetchWithRetry(`${API_URL}/maquinas/${id}`);
     if (!res.ok) throw new Error("Error al obtener máquina");
     return res.json();
   },
@@ -102,13 +120,13 @@ export const api = {
     const url = maquina_id
       ? `${API_URL}/mantenimientos?maquina_id=${maquina_id}`
       : `${API_URL}/mantenimientos`;
-    const res = await fetchWithTimeout(url);
+    const res = await fetchWithRetry(url);
     if (!res.ok) throw new Error("Error al obtener mantenimientos");
     return res.json();
   },
 
   async getMantenimiento(id: string): Promise<Mantenimiento> {
-    const res = await fetchWithTimeout(`${API_URL}/mantenimientos/${id}`);
+    const res = await fetchWithRetry(`${API_URL}/mantenimientos/${id}`);
     if (!res.ok) throw new Error("Error al obtener mantenimiento");
     return res.json();
   },
@@ -152,13 +170,13 @@ export const api = {
     const url = mantenimiento_id
       ? `${API_URL}/repuestos?mantenimiento_id=${mantenimiento_id}`
       : `${API_URL}/repuestos`;
-    const res = await fetchWithTimeout(url);
+    const res = await fetchWithRetry(url);
     if (!res.ok) throw new Error("Error al obtener repuestos");
     return res.json();
   },
 
   async getRepuesto(id: string): Promise<Repuesto> {
-    const res = await fetchWithTimeout(`${API_URL}/repuestos/${id}`);
+    const res = await fetchWithRetry(`${API_URL}/repuestos/${id}`);
     if (!res.ok) throw new Error("Error al obtener repuesto");
     return res.json();
   },
@@ -201,7 +219,7 @@ export const api = {
     storage?: { used_mb: number; limit_mb: number; percent: number };
     error?: string;
   }> {
-    const res = await fetchWithTimeout(`${API_URL}/health/db`);
+    const res = await fetchWithRetry(`${API_URL}/health/db`);
     return res.json();
   },
 };

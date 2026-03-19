@@ -21,6 +21,7 @@ export default function MaquinasScreen() {
   const [maquinas, setMaquinas] = useState<Maquina[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [confirm, setConfirm] = useState<{ visible: boolean; title: string; message: string; actions: ConfirmDialogAction[]; icon?: any }>({
     visible: false, title: "", message: "", actions: [],
@@ -29,10 +30,12 @@ export default function MaquinasScreen() {
 
   const fetchMaquinas = useCallback(async () => {
     try {
+      setLoadError(false);
       const data = await api.getMaquinas();
       setMaquinas(data);
     } catch {
-      showToast("error", "No se pudieron cargar las máquinas");
+      setLoadError(true);
+      showToast("error", "No se pudieron cargar las máquinas. Desliza hacia abajo para reintentar.");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -167,6 +170,25 @@ export default function MaquinasScreen() {
 
       {loading ? (
         <MaquinasListSkeleton />
+      ) : loadError && maquinas.length === 0 ? (
+        <View className="flex-1 items-center justify-center px-8">
+          <View className="w-20 h-20 rounded-full bg-surface items-center justify-center mb-5">
+            <Feather name="wifi-off" size={36} color="#EF4444" />
+          </View>
+          <Text className="text-textSecondary text-base font-inter-medium mb-1.5 text-center">
+            No se pudo conectar al servidor
+          </Text>
+          <Text className="text-[#555] text-sm font-inter-regular mb-6 text-center">
+            El servidor puede estar iniciando. Intenta de nuevo en unos segundos.
+          </Text>
+          <Pressable
+            onPress={() => { setLoading(true); fetchMaquinas(); }}
+            className="flex-row items-center gap-2 bg-accent px-6 py-3 rounded-2xl active:scale-[0.98]"
+          >
+            <Feather name="refresh-cw" size={16} color="white" />
+            <Text className="text-white text-sm font-inter-medium">Reintentar</Text>
+          </Pressable>
+        </View>
       ) : (
       <FlatList
         data={maquinas}

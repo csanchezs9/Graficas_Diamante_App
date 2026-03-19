@@ -1,11 +1,15 @@
 import "../global.css";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import * as SplashScreen from "expo-splash-screen";
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from "@expo-google-fonts/inter";
-import { View, ActivityIndicator } from "react-native";
+import { View } from "react-native";
 import { ToastProvider, useToast } from "../context/ToastContext";
 import { api } from "../services/api";
+
+// Keep splash visible while fonts load
+SplashScreen.preventAutoHideAsync();
 
 function DbHealthCheck() {
   const { showToast } = useToast();
@@ -41,7 +45,6 @@ function DbHealthCheck() {
       }
     };
 
-    // Small delay to let the app render first
     const timer = setTimeout(check, 3000);
     return () => clearTimeout(timer);
   }, []);
@@ -57,30 +60,34 @@ export default function RootLayout() {
     Inter_700Bold,
   });
 
+  const onLayoutReady = useCallback(async () => {
+    if (fontsLoaded || fontError) {
+      await SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
   if (!fontsLoaded && !fontError) {
-    return (
-      <View style={{ flex: 1, backgroundColor: "#0A0A0A", alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator size="large" color="#3B82F6" />
-      </View>
-    );
+    return null;
   }
 
   return (
     <ToastProvider>
       <DbHealthCheck />
       <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: "#0A0A0A" },
-          animation: "slide_from_right",
-        }}
-      >
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="maquina/[id]" />
-        <Stack.Screen name="mantenimiento/[id]" />
-        <Stack.Screen name="repuesto/[id]" />
-      </Stack>
+      <View style={{ flex: 1 }} onLayout={onLayoutReady}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: "#0A0A0A" },
+            animation: "slide_from_right",
+          }}
+        >
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="maquina/[id]" />
+          <Stack.Screen name="mantenimiento/[id]" />
+          <Stack.Screen name="repuesto/[id]" />
+        </Stack>
+      </View>
     </ToastProvider>
   );
 }

@@ -4,13 +4,12 @@ import { Repuesto } from "../types/repuesto";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api";
 
-const TIMEOUT_MS = 45000;       // 45s to handle Render cold starts (~28s)
-const RETRY_ATTEMPTS = 2;
-const RETRY_DELAY_MS = 2000;
+const TIMEOUT_MS = 60000;       // 60s to handle Render cold starts (~30-40s)
+const TIMEOUT_MS_WRITE = 30000; // 30s for POST/PUT/DELETE
 
-function fetchWithTimeout(url: string, options?: RequestInit): Promise<Response> {
+function fetchWithTimeout(url: string, options?: RequestInit, timeout = TIMEOUT_MS): Promise<Response> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeout);
 
   return fetch(url, { ...options, signal: controller.signal })
     .catch((err) => {
@@ -23,19 +22,14 @@ function fetchWithTimeout(url: string, options?: RequestInit): Promise<Response>
 }
 
 async function fetchWithRetry(url: string, options?: RequestInit): Promise<Response> {
-  for (let attempt = 0; attempt <= RETRY_ATTEMPTS; attempt++) {
-    try {
-      const res = await fetchWithTimeout(url, options);
-      return res;
-    } catch (err) {
-      if (attempt < RETRY_ATTEMPTS) {
-        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
-        continue;
-      }
-      throw err;
-    }
+  // Attempt 1: try with full timeout (handles cold start)
+  try {
+    return await fetchWithTimeout(url, options);
+  } catch {
+    // Attempt 2: server should be awake now, retry
+    await new Promise((r) => setTimeout(r, 1000));
+    return fetchWithTimeout(url, options);
   }
-  throw new Error("Error de conexión");
 }
 
 export const api = {

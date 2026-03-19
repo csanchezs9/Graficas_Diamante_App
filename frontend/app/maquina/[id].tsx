@@ -459,6 +459,7 @@ export default function MaquinaDetailScreen() {
                 height: SCREEN_HEIGHT * 0.7,
               }}
               resizeMode="contain"
+              onError={() => setImagePreviewVisible(false)}
             />
           </View>
         </Modal>

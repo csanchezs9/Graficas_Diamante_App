@@ -458,6 +458,7 @@ export default function MantenimientoDetailScreen() {
                 height: SCREEN_HEIGHT * 0.7,
               }}
               resizeMode="contain"
+              onError={() => setPreviewImage(null)}
             />
           </View>
         </Modal>

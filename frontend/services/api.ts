@@ -192,4 +192,16 @@ export const api = {
     if (!res.ok) throw new Error("Error al actualizar repuesto");
     return res.json();
   },
+
+  // Health
+  async getDbHealth(): Promise<{
+    status: string;
+    supabase: string;
+    database?: { used_mb: number; limit_mb: number; percent: number };
+    storage?: { used_mb: number; limit_mb: number; percent: number };
+    error?: string;
+  }> {
+    const res = await fetchWithTimeout(`${API_URL}/health/db`);
+    return res.json();
+  },
 };

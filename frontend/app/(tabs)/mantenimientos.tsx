@@ -14,7 +14,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
-import { api } from "../../services/api";
+import { api, resetWakeUp } from "../../services/api";
 import { Maquina } from "../../types/maquina";
 import { Mantenimiento } from "../../types/mantenimiento";
 import AddMantenimientoModal from "../../components/AddMantenimientoModal";
@@ -305,7 +305,7 @@ export default function MantenimientosScreen() {
             El servidor puede estar iniciando. Intenta de nuevo en unos segundos.
           </Text>
           <Pressable
-            onPress={() => { setLoading(true); fetchData(); }}
+            onPress={() => { resetWakeUp(); setLoading(true); fetchData(); }}
             className="flex-row items-center gap-2 bg-accent px-6 py-3 rounded-2xl active:scale-[0.98]"
           >
             <Feather name="refresh-cw" size={16} color="white" />

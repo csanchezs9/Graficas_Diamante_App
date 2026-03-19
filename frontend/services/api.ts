@@ -5,19 +5,35 @@ import { Repuesto } from "../types/repuesto";
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api";
 
 const TIMEOUT_MS = 30000; // 30s for normal requests (server already awake)
+const WAKE_POLL_INTERVAL = 3000; // Poll every 3s during cold start
+const WAKE_MAX_WAIT = 150000; // 2.5 minutes max wait for cold start
 
-// Wake-up ping: fires immediately on app start, no timeout, wakes Render server
+// Wake-up: polls /health until server responds (handles Render cold starts of 60-120s)
 let serverReady: Promise<void> | null = null;
 
 function wakeUpServer(): Promise<void> {
   if (!serverReady) {
-    serverReady = fetch(`${API_URL}/health`)
-      .then(() => {})
-      .catch(async () => {
-        // First ping failed (no network, DNS, etc) — wait and retry once
-        await new Promise((r) => setTimeout(r, 5000));
-        return fetch(`${API_URL}/health`).then(() => {}).catch(() => {});
-      });
+    serverReady = new Promise<void>(async (resolve) => {
+      const start = Date.now();
+      while (Date.now() - start < WAKE_MAX_WAIT) {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 10000);
+          const res = await fetch(`${API_URL}/health`, { signal: controller.signal });
+          clearTimeout(timer);
+          if (res.ok) {
+            console.log(`[WakeUp] Server ready in ${((Date.now() - start) / 1000).toFixed(1)}s`);
+            resolve();
+            return;
+          }
+        } catch {
+          // Server not ready yet — connection refused, timeout, etc.
+        }
+        await new Promise((r) => setTimeout(r, WAKE_POLL_INTERVAL));
+      }
+      console.warn("[WakeUp] Max wait exceeded, proceeding anyway");
+      resolve();
+    });
   }
   return serverReady;
 }
@@ -40,17 +56,23 @@ function fetchWithTimeout(url: string, options?: RequestInit, timeout = TIMEOUT_
 }
 
 async function fetchWithRetry(url: string, options?: RequestInit): Promise<Response> {
-  // Wait for server wake-up ping to finish first
+  // Wait for server to actually be alive (polls until 200 OK)
   await wakeUpServer();
 
-  // Now fetch — server should be awake
+  // Server confirmed alive — fetch data
   try {
     return await fetchWithTimeout(url, options);
   } catch {
-    // One more retry in case of transient failure
-    await new Promise((r) => setTimeout(r, 2000));
+    // If it fails after wake-up confirmed, reset and re-poll (server may have crashed)
+    serverReady = null;
+    await wakeUpServer();
     return fetchWithTimeout(url, options);
   }
+}
+
+// Reset wake-up state (e.g., when user taps "Reintentar")
+export function resetWakeUp() {
+  serverReady = null;
 }
 
 export const api = {

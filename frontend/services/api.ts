@@ -13,7 +13,11 @@ function wakeUpServer(): Promise<void> {
   if (!serverReady) {
     serverReady = fetch(`${API_URL}/health`)
       .then(() => {})
-      .catch(() => {});
+      .catch(async () => {
+        // First ping failed (no network, DNS, etc) — wait and retry once
+        await new Promise((r) => setTimeout(r, 5000));
+        return fetch(`${API_URL}/health`).then(() => {}).catch(() => {});
+      });
   }
   return serverReady;
 }

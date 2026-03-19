@@ -4,8 +4,22 @@ import { Repuesto } from "../types/repuesto";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api";
 
-const TIMEOUT_MS = 60000;       // 60s to handle Render cold starts (~30-40s)
-const TIMEOUT_MS_WRITE = 30000; // 30s for POST/PUT/DELETE
+const TIMEOUT_MS = 30000; // 30s for normal requests (server already awake)
+
+// Wake-up ping: fires immediately on app start, no timeout, wakes Render server
+let serverReady: Promise<void> | null = null;
+
+function wakeUpServer(): Promise<void> {
+  if (!serverReady) {
+    serverReady = fetch(`${API_URL}/health`)
+      .then(() => {})
+      .catch(() => {});
+  }
+  return serverReady;
+}
+
+// Fire immediately when this module loads
+wakeUpServer();
 
 function fetchWithTimeout(url: string, options?: RequestInit, timeout = TIMEOUT_MS): Promise<Response> {
   const controller = new AbortController();
@@ -22,12 +36,15 @@ function fetchWithTimeout(url: string, options?: RequestInit, timeout = TIMEOUT_
 }
 
 async function fetchWithRetry(url: string, options?: RequestInit): Promise<Response> {
-  // Attempt 1: try with full timeout (handles cold start)
+  // Wait for server wake-up ping to finish first
+  await wakeUpServer();
+
+  // Now fetch — server should be awake
   try {
     return await fetchWithTimeout(url, options);
   } catch {
-    // Attempt 2: server should be awake now, retry
-    await new Promise((r) => setTimeout(r, 1000));
+    // One more retry in case of transient failure
+    await new Promise((r) => setTimeout(r, 2000));
     return fetchWithTimeout(url, options);
   }
 }

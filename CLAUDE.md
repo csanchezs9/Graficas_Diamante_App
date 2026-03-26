@@ -4,7 +4,7 @@
 - **Frontend**: Expo + Expo Router + TypeScript + NativeWind (Tailwind CSS for RN)
 - **Backend**: Node.js + Express.js (REST API, port 3000)
 - **Database**: Supabase (PostgreSQL, free tier)
-- **Deploy**: Backend on Render, DB on Supabase Cloud
+- **Deploy**: Backend dockerizado en servidor del cliente (nube), DB en Supabase Cloud
 
 ## Frontend Design Guidelines
 - **Style**: Minimalist, professional, clean. NO Material Design genérico, NO componentes prefabricados.
@@ -38,10 +38,22 @@
 - `POST /api/upload` — subir imagen (multipart/form-data, field: "image", query: ?bucket=)
 - `GET /api/health` — health check
 
+## Deployment (Docker)
+- Backend dockerizado con `Dockerfile` + `docker-compose.yml` en `backend/`
+- Imagen base: `node:20-alpine`
+- Variables de entorno requeridas: `PORT`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+- Levantar: `docker compose up -d --build`
+- El cliente tiene 2 servidores locales + 1 servidor en la nube. Se despliega en el de la nube vía SSH.
+- Keep-alive de Supabase sigue activo (ping cada 4h dentro del contenedor)
+- Después de desplegar, actualizar la URL del API en el frontend para apuntar a la IP del servidor del cliente
+
 ## Project Structure
 ```
 ├── frontend/          # Expo app (React Native + NativeWind)
 ├── backend/           # Express.js API
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   ├── .dockerignore
 │   └── src/
 │       ├── index.js
 │       ├── routes/

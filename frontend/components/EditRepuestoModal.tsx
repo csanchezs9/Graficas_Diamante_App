@@ -12,9 +12,8 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Feather } from "@expo/vector-icons";
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DatePicker from "./DatePicker";
 import { Repuesto } from "../types/repuesto";
 import { formatCurrency, parseCurrency } from "../utils/currency";
 
@@ -281,13 +280,10 @@ export default function EditRepuestoModal({
           </Pressable>
           {showDatePicker && (
             <View className="mb-5 -mt-3">
-              <DateTimePicker
+              <DatePicker
                 value={fecha}
-                mode="date"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
                 onChange={onDateChange}
                 maximumDate={new Date()}
-                themeVariant="dark"
               />
               {Platform.OS === "ios" && (
                 <Pressable

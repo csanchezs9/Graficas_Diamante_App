@@ -12,9 +12,8 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DatePicker from "./DatePicker";
 
 interface Props {
   visible: boolean;
@@ -348,13 +347,10 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
 
           {showDatePicker && (
             <View className="mb-6">
-              <DateTimePicker
+              <DatePicker
                 value={fechaInspeccion || new Date()}
-                mode="date"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
                 onChange={onDateChange}
                 maximumDate={new Date()}
-                themeVariant="dark"
               />
               {Platform.OS === "ios" && (
                 <Pressable

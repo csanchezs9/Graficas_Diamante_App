@@ -11,9 +11,8 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import DatePicker from "../../components/DatePicker";
 import { api, resetWakeUp } from "../../services/api";
 import { Maquina } from "../../types/maquina";
 import { Mantenimiento } from "../../types/mantenimiento";
@@ -446,12 +445,9 @@ export default function MantenimientosScreen() {
                 </Pressable>
                 {showDatePicker && (
                   <View className="pb-2">
-                    <DateTimePicker
+                    <DatePicker
                       value={filterDate || new Date()}
-                      mode="date"
-                      display={Platform.OS === "ios" ? "spinner" : "default"}
                       onChange={onDateChange}
-                      themeVariant="dark"
                     />
                     {Platform.OS === "ios" && (
                       <Pressable

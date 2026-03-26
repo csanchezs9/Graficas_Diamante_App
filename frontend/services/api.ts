@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { Maquina } from "../types/maquina";
 import { Mantenimiento } from "../types/mantenimiento";
 import { Repuesto } from "../types/repuesto";
@@ -129,11 +130,17 @@ export const api = {
     const match = /\.(\w+)$/.exec(filename);
     const type = match ? `image/${match[1]}` : "image/jpeg";
 
-    formData.append("image", {
-      uri,
-      name: filename,
-      type,
-    } as unknown as Blob);
+    if (Platform.OS === "web") {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      formData.append("image", blob, filename);
+    } else {
+      formData.append("image", {
+        uri,
+        name: filename,
+        type,
+      } as unknown as Blob);
+    }
 
     const res = await fetchWithTimeout(`${API_URL}/upload?bucket=${bucket}`, {
       method: "POST",

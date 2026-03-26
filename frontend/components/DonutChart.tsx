@@ -172,8 +172,7 @@ function AnimatedSegment({
       strokeWidth={strokeWidth}
       fill="none"
       strokeLinecap="butt"
-      rotation={-90}
-      origin={`${cx}, ${cy}`}
+      transform={`rotate(-90, ${cx}, ${cy})`}
       animatedProps={animatedProps}
     />
   );

@@ -7,6 +7,7 @@ const MAX_RETRIES = 3;
 let intervalId = null;
 let lastPing = null;
 let lastStatus = 'unknown';
+let consecutiveFailures = 0;
 
 async function pingSupabase(attempt = 1) {
   try {
@@ -16,9 +17,11 @@ async function pingSupabase(attempt = 1) {
 
     lastPing = new Date().toISOString();
     lastStatus = 'ok';
+    consecutiveFailures = 0;
     console.log(`[KeepAlive] Ping OK — ${lastPing}`);
   } catch (err) {
     lastStatus = 'error';
+    consecutiveFailures++;
     console.error(`[KeepAlive] Ping FAILED (attempt ${attempt}/${MAX_RETRIES}) —`, err.message);
 
     if (attempt < MAX_RETRIES) {
@@ -26,7 +29,7 @@ async function pingSupabase(attempt = 1) {
       console.log(`[KeepAlive] Retrying in ${delay / 60000} min...`);
       setTimeout(() => pingSupabase(attempt + 1), delay);
     } else {
-      console.error('[KeepAlive] All retries exhausted. Will try again at next interval.');
+      console.error(`[KeepAlive] All retries exhausted (${consecutiveFailures} consecutive failures). Will try again at next interval.`);
     }
   }
 }
@@ -39,15 +42,10 @@ function startKeepAlive() {
 
   // Then every 4 hours
   intervalId = setInterval(() => pingSupabase(), PING_INTERVAL);
-
-  // Ensure interval survives unhandled rejections
-  process.on('uncaughtException', (err) => {
-    console.error('[KeepAlive] Uncaught exception, keepalive still running:', err.message);
-  });
 }
 
 function getKeepAliveStatus() {
-  return { lastPing, lastStatus };
+  return { lastPing, lastStatus, consecutiveFailures };
 }
 
 module.exports = { startKeepAlive, getKeepAliveStatus };

@@ -22,6 +22,15 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/mantenimientos', mantenimientosRoutes);
 app.use('/api/repuestos', repuestosRoutes);
 
+// Prevent crashes from killing the keep-alive
+process.on('unhandledRejection', (err) => {
+  console.error('[Process] Unhandled rejection:', err);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[Process] Uncaught exception:', err);
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   startKeepAlive();

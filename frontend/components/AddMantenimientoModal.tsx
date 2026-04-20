@@ -15,16 +15,9 @@ import * as ImagePicker from "expo-image-picker";
 import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import DatePicker from "./DatePicker";
 import { Maquina } from "../types/maquina";
+import { Repuesto } from "../types/repuesto";
+import { api } from "../services/api";
 import { formatCurrency, parseCurrency } from "../utils/currency";
-
-export interface RepuestoDraft {
-  nombre: string;
-  codigo: string;
-  tipo: string;
-  cantidad_disponible: number;
-  costo_unitario: number;
-  proveedor: string;
-}
 
 interface Props {
   visible: boolean;
@@ -38,7 +31,7 @@ interface Props {
     fotos_uris: string[];
     costo_total: number;
     tipo: string;
-    repuestos_draft: RepuestoDraft[];
+    selected_repuesto_ids: string[];
   }) => Promise<void>;
   defaultMaquinaId?: string;
 }
@@ -48,19 +41,10 @@ const tipoOptions = [
   { value: "correctivo", label: "Correctivo", icon: "tool", color: "#F59E0B" },
 ];
 
-const repuestoTipoOptions = [
-  { value: "mecanico", label: "Mecánico", icon: "settings", color: "#3B82F6" },
-  { value: "consumible", label: "Consumible", icon: "box", color: "#F59E0B" },
-];
-
-const emptyDraft = (): RepuestoDraft => ({
-  nombre: "",
-  codigo: "",
-  tipo: "mecanico",
-  cantidad_disponible: 0,
-  costo_unitario: 0,
-  proveedor: "",
-});
+const repuestoTipoConfig: Record<string, { color: string; bg: string }> = {
+  mecanico: { color: "#3B82F6", bg: "rgba(59,130,246,0.12)" },
+  consumible: { color: "#F59E0B", bg: "rgba(245,158,11,0.12)" },
+};
 
 export default function AddMantenimientoModal({
   visible,
@@ -80,25 +64,17 @@ export default function AddMantenimientoModal({
   const [tipo, setTipo] = useState("preventivo");
   const [loading, setLoading] = useState(false);
 
-  // Repuestos draft
-  const [repuestosDraft, setRepuestosDraft] = useState<RepuestoDraft[]>([]);
-  const [showRepuestoForm, setShowRepuestoForm] = useState(false);
-  const [draftNombre, setDraftNombre] = useState("");
-  const [draftCodigo, setDraftCodigo] = useState("");
-  const [draftTipo, setDraftTipo] = useState("mecanico");
-  const [draftCantidad, setDraftCantidad] = useState("");
-  const [draftCosto, setDraftCosto] = useState("");
-  const [draftProveedor, setDraftProveedor] = useState("");
+  // Repuestos selector
+  const [allRepuestos, setAllRepuestos] = useState<Repuesto[]>([]);
+  const [loadingRepuestos, setLoadingRepuestos] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [repuestoSearch, setRepuestoSearch] = useState("");
+  const [showRepuestoList, setShowRepuestoList] = useState(false);
 
   const scrollRef = useRef<ScrollView>(null);
   const tecnicoRef = useRef<TextInput>(null);
   const descripcionRef = useRef<TextInput>(null);
   const costoRef = useRef<TextInput>(null);
-  const draftNombreRef = useRef<TextInput>(null);
-  const draftCodigoRef = useRef<TextInput>(null);
-  const draftCantidadRef = useRef<TextInput>(null);
-  const draftCostoRef = useRef<TextInput>(null);
-  const draftProveedorRef = useRef<TextInput>(null);
 
   useEffect(() => {
     if (visible) {
@@ -111,31 +87,33 @@ export default function AddMantenimientoModal({
       setTipo("preventivo");
       setShowMaquinaMenu(false);
       setShowDatePicker(false);
-      setRepuestosDraft([]);
-      setShowRepuestoForm(false);
-      resetDraftForm();
+      setSelectedIds([]);
+      setRepuestoSearch("");
+      setShowRepuestoList(false);
+      fetchRepuestos();
     }
   }, [visible]);
 
-  const resetDraftForm = () => {
-    setDraftNombre("");
-    setDraftCodigo("");
-    setDraftTipo("mecanico");
-    setDraftCantidad("");
-    setDraftCosto("");
-    setDraftProveedor("");
+  const fetchRepuestos = async () => {
+    setLoadingRepuestos(true);
+    try {
+      const data = await api.getRepuestos();
+      setAllRepuestos(data);
+    } catch {
+      // non-critical
+    } finally {
+      setLoadingRepuestos(false);
+    }
   };
 
   const pickImage = async () => {
     if (fotosUris.length >= 3) return;
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") return;
-
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       quality: 0.8,
     });
-
     if (!result.canceled && result.assets[0]) {
       setFotosUris((prev) => [...prev, result.assets[0].uri]);
     }
@@ -150,30 +128,25 @@ export default function AddMantenimientoModal({
     if (selectedDate) setFechaRealizacion(selectedDate);
   };
 
-  const addRepuesto = () => {
-    if (!draftNombre.trim()) return;
-    setRepuestosDraft((prev) => [
-      ...prev,
-      {
-        nombre: draftNombre.trim(),
-        codigo: draftCodigo.trim(),
-        tipo: draftTipo,
-        cantidad_disponible: Math.max(0, parseInt(draftCantidad) || 0),
-        costo_unitario: Math.max(0, parseCurrency(draftCosto)),
-        proveedor: draftProveedor.trim(),
-      },
-    ]);
-    resetDraftForm();
-    setShowRepuestoForm(false);
+  const toggleRepuesto = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
   };
 
-  const removeRepuesto = (index: number) => {
-    setRepuestosDraft((prev) => prev.filter((_, i) => i !== index));
-  };
+  const filteredRepuestos = allRepuestos.filter((r) => {
+    const q = repuestoSearch.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      r.nombre.toLowerCase().includes(q) ||
+      (r.codigo || "").toLowerCase().includes(q) ||
+      (r.proveedor || "").toLowerCase().includes(q)
+    );
+  });
 
+  const selectedRepuestos = allRepuestos.filter((r) => selectedIds.includes(r.id));
   const selectedMaquina = maquinas.find((m) => m.id === maquinaId);
   const canSubmit = maquinaId && tecnico.trim() && descripcion.trim();
-  const canAddRepuesto = draftNombre.trim().length > 0;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -187,7 +160,7 @@ export default function AddMantenimientoModal({
         fotos_uris: fotosUris,
         costo_total: parseCurrency(costoTotal),
         tipo,
-        repuestos_draft: repuestosDraft,
+        selected_repuesto_ids: selectedIds,
       });
       onClose();
     } catch {
@@ -223,7 +196,7 @@ export default function AddMantenimientoModal({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Tipo — pill selector */}
+          {/* Tipo */}
           <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
             Tipo de Mantenimiento *
           </Text>
@@ -243,15 +216,9 @@ export default function AddMantenimientoModal({
                       : undefined
                   }
                 >
-                  <Feather
-                    name={opt.icon as any}
-                    size={16}
-                    color={isSelected ? opt.color : "#666"}
-                  />
+                  <Feather name={opt.icon as any} size={16} color={isSelected ? opt.color : "#666"} />
                   <Text
-                    className={`text-sm ${
-                      isSelected ? "font-inter-semibold" : "font-inter-regular"
-                    }`}
+                    className={`text-sm ${isSelected ? "font-inter-semibold" : "font-inter-regular"}`}
                     style={{ color: isSelected ? opt.color : "#666" }}
                   >
                     {opt.label}
@@ -261,7 +228,7 @@ export default function AddMantenimientoModal({
             })}
           </View>
 
-          {/* Maquina selector */}
+          {/* Maquina */}
           <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
             Maquina *
           </Text>
@@ -283,59 +250,34 @@ export default function AddMantenimientoModal({
                   showMaquinaMenu ? "border-accent mb-1.5" : "border-border mb-5"
                 }`}
               >
-                <Text
-                  className={`text-base font-inter-regular ${
-                    selectedMaquina ? "text-textPrimary" : "text-[#555]"
-                  }`}
-                >
+                <Text className={`text-base font-inter-regular ${selectedMaquina ? "text-textPrimary" : "text-[#555]"}`}>
                   {selectedMaquina?.nombre || "Seleccionar maquina"}
                 </Text>
-                <Feather
-                  name={showMaquinaMenu ? "chevron-up" : "chevron-down"}
-                  size={18}
-                  color="#A0A0A0"
-                />
+                <Feather name={showMaquinaMenu ? "chevron-up" : "chevron-down"} size={18} color="#A0A0A0" />
               </Pressable>
               {showMaquinaMenu && (
                 <View className="bg-surfaceLight border border-border rounded-xl mb-5 max-h-[200px] overflow-hidden">
                   <ScrollView nestedScrollEnabled>
                     {maquinas.map((m, idx) => {
-                      const isSelected = maquinaId === m.id;
+                      const isSel = maquinaId === m.id;
                       return (
                         <Pressable
                           key={m.id}
-                          onPress={() => {
-                            setMaquinaId(m.id);
-                            setShowMaquinaMenu(false);
-                          }}
+                          onPress={() => { setMaquinaId(m.id); setShowMaquinaMenu(false); }}
                           className="px-4 py-3.5 flex-row items-center justify-between"
                           style={{
-                            backgroundColor: isSelected
-                              ? "rgba(59,130,246,0.08)"
-                              : "transparent",
+                            backgroundColor: isSel ? "rgba(59,130,246,0.08)" : "transparent",
                             borderTopWidth: idx > 0 ? 1 : 0,
                             borderTopColor: "#2A2A2A",
                           }}
                         >
                           <View className="flex-row items-center gap-2.5">
-                            <Feather
-                              name="settings"
-                              size={14}
-                              color={isSelected ? "#3B82F6" : "#555"}
-                            />
-                            <Text
-                              className={`text-[15px] ${
-                                isSelected
-                                  ? "font-inter-medium text-[#60A5FA]"
-                                  : "font-inter-regular text-textSecondary"
-                              }`}
-                            >
+                            <Feather name="settings" size={14} color={isSel ? "#3B82F6" : "#555"} />
+                            <Text className={`text-[15px] ${isSel ? "font-inter-medium text-[#60A5FA]" : "font-inter-regular text-textSecondary"}`}>
                               {m.nombre}
                             </Text>
                           </View>
-                          {isSelected && (
-                            <Feather name="check" size={16} color="#60A5FA" />
-                          )}
+                          {isSel && <Feather name="check" size={16} color="#60A5FA" />}
                         </Pressable>
                       );
                     })}
@@ -355,28 +297,18 @@ export default function AddMantenimientoModal({
           >
             <Feather name="calendar" size={18} color="#3B82F6" />
             <Text className="text-textPrimary text-base font-inter-regular">
-              {fechaRealizacion.toLocaleDateString("es-CO", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+              {fechaRealizacion.toLocaleDateString("es-CO", { year: "numeric", month: "long", day: "numeric" })}
             </Text>
           </Pressable>
           {showDatePicker && (
             <View className="mb-5 -mt-3">
-              <DatePicker
-                value={fechaRealizacion}
-                onChange={onDateChange}
-                maximumDate={new Date()}
-              />
+              <DatePicker value={fechaRealizacion} onChange={onDateChange} maximumDate={new Date()} />
               {Platform.OS === "ios" && (
                 <Pressable
                   onPress={() => setShowDatePicker(false)}
                   className="self-center bg-accent px-6 py-2.5 rounded-xl mt-2 active:scale-[0.98]"
                 >
-                  <Text className="text-white text-sm font-inter-medium">
-                    Confirmar
-                  </Text>
+                  <Text className="text-white text-sm font-inter-medium">Confirmar</Text>
                 </Pressable>
               )}
             </View>
@@ -434,21 +366,14 @@ export default function AddMantenimientoModal({
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 
-          {/* Fotos del trabajo (hasta 3) */}
+          {/* Fotos */}
           <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
             Fotos del Trabajo (max. 3)
           </Text>
           <View className="flex-row gap-2.5 mb-6 flex-wrap">
             {fotosUris.map((uri, index) => (
-              <View
-                key={index}
-                className="w-[100px] h-[100px] rounded-xl overflow-hidden relative"
-              >
-                <Image
-                  source={{ uri }}
-                  className="w-[100px] h-[100px]"
-                  resizeMode="cover"
-                />
+              <View key={index} className="w-[100px] h-[100px] rounded-xl overflow-hidden relative">
+                <Image source={{ uri }} className="w-[100px] h-[100px]" resizeMode="cover" />
                 <Pressable
                   onPress={() => removePhoto(index)}
                   className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 items-center justify-center active:scale-[0.98]"
@@ -463,76 +388,59 @@ export default function AddMantenimientoModal({
                 className="w-[100px] h-[100px] rounded-xl border-[1.5px] border-dashed border-border items-center justify-center bg-[#1A1A1A] active:scale-[0.98]"
               >
                 <Feather name="camera" size={22} color="#555" />
-                <Text className="text-[#555] text-[10px] font-inter-medium mt-1">
-                  {fotosUris.length}/3
-                </Text>
+                <Text className="text-[#555] text-[10px] font-inter-medium mt-1">{fotosUris.length}/3</Text>
               </Pressable>
             )}
           </View>
 
-          {/* Repuestos utilizados */}
+          {/* Repuestos — selector */}
           <View className="border-t border-border pt-5 mb-6">
             <View className="flex-row items-center justify-between mb-3">
               <View className="flex-row items-center gap-2">
                 <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest">
                   Repuestos Utilizados
                 </Text>
-                {repuestosDraft.length > 0 && (
+                {selectedIds.length > 0 && (
                   <View className="bg-accent/[0.12] px-2 py-0.5 rounded-[10px]">
-                    <Text className="text-accent text-[11px] font-inter-semibold">
-                      {repuestosDraft.length}
-                    </Text>
+                    <Text className="text-accent text-[11px] font-inter-semibold">{selectedIds.length}</Text>
                   </View>
                 )}
               </View>
-              {!showRepuestoForm && (
-                <Pressable
-                  onPress={() => setShowRepuestoForm(true)}
-                  className="flex-row items-center gap-1.5 bg-accent/[0.08] border border-accent/20 px-3 py-1.5 rounded-xl active:scale-[0.98]"
-                >
-                  <Feather name="plus" size={14} color="#3B82F6" />
-                  <Text className="text-accent text-[12px] font-inter-medium">Añadir</Text>
-                </Pressable>
-              )}
+              <Pressable
+                onPress={() => setShowRepuestoList((v) => !v)}
+                className="flex-row items-center gap-1.5 bg-accent/[0.08] border border-accent/20 px-3 py-1.5 rounded-xl active:scale-[0.98]"
+              >
+                <Feather name={showRepuestoList ? "chevron-up" : "search"} size={14} color="#3B82F6" />
+                <Text className="text-accent text-[12px] font-inter-medium">
+                  {showRepuestoList ? "Cerrar" : "Seleccionar"}
+                </Text>
+              </Pressable>
             </View>
 
-            {/* Lista de repuestos añadidos */}
-            {repuestosDraft.length > 0 && (
+            {/* Chips de seleccionados */}
+            {selectedRepuestos.length > 0 && (
               <View className="gap-2 mb-3">
-                {repuestosDraft.map((rep, idx) => {
-                  const rt = repuestoTipoOptions.find((o) => o.value === rep.tipo) || repuestoTipoOptions[0];
+                {selectedRepuestos.map((r) => {
+                  const tc = repuestoTipoConfig[r.tipo] || repuestoTipoConfig.mecanico;
                   return (
-                    <View
-                      key={idx}
-                      className="bg-surface border border-border rounded-2xl px-4 py-3 flex-row items-center justify-between"
-                    >
+                    <View key={r.id} className="bg-surface border border-border rounded-2xl px-4 py-3 flex-row items-center justify-between">
                       <View className="flex-1 mr-3">
                         <View className="flex-row items-center gap-2 mb-0.5">
                           <Text className="text-textPrimary text-[14px] font-inter-medium" numberOfLines={1}>
-                            {rep.nombre}
+                            {r.nombre}
                           </Text>
-                          <View
-                            className="px-2 py-0.5 rounded-[8px]"
-                            style={{ backgroundColor: `${rt.color}18` }}
-                          >
-                            <Text className="text-[10px] font-inter-medium" style={{ color: rt.color }}>
-                              {rt.label}
+                          <View className="px-2 py-0.5 rounded-[8px]" style={{ backgroundColor: tc.bg }}>
+                            <Text className="text-[10px] font-inter-medium capitalize" style={{ color: tc.color }}>
+                              {r.tipo}
                             </Text>
                           </View>
                         </View>
                         <Text className="text-[#666] text-[12px] font-inter-regular">
-                          {[
-                            rep.codigo && `#${rep.codigo}`,
-                            rep.cantidad_disponible > 0 && `x${rep.cantidad_disponible}`,
-                            rep.costo_unitario > 0 && `$${rep.costo_unitario.toLocaleString()}`,
-                            rep.proveedor,
-                          ]
-                            .filter(Boolean)
-                            .join(" · ")}
+                          {[r.codigo && `#${r.codigo}`, r.proveedor].filter(Boolean).join(" · ")}
                         </Text>
                       </View>
                       <Pressable
-                        onPress={() => removeRepuesto(idx)}
+                        onPress={() => toggleRepuesto(r.id)}
                         className="w-7 h-7 rounded-full bg-danger/[0.08] items-center justify-center active:scale-[0.98]"
                       >
                         <Feather name="x" size={14} color="#EF4444" />
@@ -543,135 +451,96 @@ export default function AddMantenimientoModal({
               </View>
             )}
 
-            {/* Formulario inline de repuesto */}
-            {showRepuestoForm && (
-              <View className="bg-surface border border-border rounded-2xl p-4">
-                {/* Tipo */}
-                <View className="flex-row gap-2 mb-4">
-                  {repuestoTipoOptions.map((opt) => {
-                    const isSel = draftTipo === opt.value;
-                    return (
-                      <Pressable
-                        key={opt.value}
-                        onPress={() => setDraftTipo(opt.value)}
-                        className={`flex-row items-center gap-1.5 py-2 px-3 rounded-xl border-[1.5px] active:scale-[0.98] ${
-                          isSel ? "" : "border-border bg-surfaceLight"
-                        }`}
-                        style={isSel ? { borderColor: opt.color, backgroundColor: `${opt.color}15` } : undefined}
-                      >
-                        <Feather name={opt.icon as any} size={13} color={isSel ? opt.color : "#666"} />
-                        <Text
-                          className={`text-[12px] ${isSel ? "font-inter-semibold" : "font-inter-regular"}`}
-                          style={{ color: isSel ? opt.color : "#666" }}
-                        >
-                          {opt.label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
+            {/* Lista de búsqueda */}
+            {showRepuestoList && (
+              <View className="bg-surface border border-border rounded-2xl overflow-hidden">
+                {/* Buscador */}
+                <View className="flex-row items-center px-4 py-2.5 border-b border-border gap-2">
+                  <Feather name="search" size={15} color="#666" />
+                  <TextInput
+                    value={repuestoSearch}
+                    onChangeText={setRepuestoSearch}
+                    placeholder="Buscar por nombre, código..."
+                    placeholderTextColor="#555"
+                    className="flex-1 text-textPrimary text-[14px] font-inter-regular py-1"
+                  />
+                  {repuestoSearch.length > 0 && (
+                    <Pressable onPress={() => setRepuestoSearch("")}>
+                      <Feather name="x" size={15} color="#666" />
+                    </Pressable>
+                  )}
                 </View>
 
-                {/* Nombre */}
-                <TextInput
-                  ref={draftNombreRef}
-                  value={draftNombre}
-                  onChangeText={setDraftNombre}
-                  placeholder="Nombre del repuesto *"
-                  placeholderTextColor="#555"
-                  returnKeyType="next"
-                  onSubmitEditing={() => draftCodigoRef.current?.focus()}
-                  blurOnSubmit={false}
-                  maxLength={100}
-                  className="bg-surfaceLight border border-border rounded-xl px-3.5 py-3 text-textPrimary text-[14px] font-inter-regular mb-3"
-                />
-
-                {/* Codigo */}
-                <TextInput
-                  ref={draftCodigoRef}
-                  value={draftCodigo}
-                  onChangeText={setDraftCodigo}
-                  placeholder="Código de referencia"
-                  placeholderTextColor="#555"
-                  returnKeyType="next"
-                  onSubmitEditing={() => draftCantidadRef.current?.focus()}
-                  blurOnSubmit={false}
-                  maxLength={60}
-                  className="bg-surfaceLight border border-border rounded-xl px-3.5 py-3 text-textPrimary text-[14px] font-inter-regular mb-3"
-                />
-
-                {/* Cantidad + Costo en fila */}
-                <View className="flex-row gap-2.5 mb-3">
-                  <TextInput
-                    ref={draftCantidadRef}
-                    value={draftCantidad}
-                    onChangeText={setDraftCantidad}
-                    placeholder="Cantidad"
-                    placeholderTextColor="#555"
-                    keyboardType="numeric"
-                    returnKeyType="next"
-                    onSubmitEditing={() => draftCostoRef.current?.focus()}
-                    blurOnSubmit={false}
-                    className="flex-1 bg-surfaceLight border border-border rounded-xl px-3.5 py-3 text-textPrimary text-[14px] font-inter-regular"
-                  />
-                  <TextInput
-                    ref={draftCostoRef}
-                    value={draftCosto}
-                    onChangeText={(t) => setDraftCosto(formatCurrency(t))}
-                    placeholder="Costo unitario"
-                    placeholderTextColor="#555"
-                    keyboardType="numeric"
-                    returnKeyType="next"
-                    onSubmitEditing={() => draftProveedorRef.current?.focus()}
-                    blurOnSubmit={false}
-                    className="flex-1 bg-surfaceLight border border-border rounded-xl px-3.5 py-3 text-textPrimary text-[14px] font-inter-regular"
-                  />
-                </View>
-
-                {/* Proveedor */}
-                <TextInput
-                  ref={draftProveedorRef}
-                  value={draftProveedor}
-                  onChangeText={setDraftProveedor}
-                  placeholder="Proveedor"
-                  placeholderTextColor="#555"
-                  returnKeyType="done"
-                  maxLength={100}
-                  className="bg-surfaceLight border border-border rounded-xl px-3.5 py-3 text-textPrimary text-[14px] font-inter-regular mb-4"
-                />
-
-                {/* Botones */}
-                <View className="flex-row gap-2.5">
-                  <Pressable
-                    onPress={() => {
-                      setShowRepuestoForm(false);
-                      resetDraftForm();
-                    }}
-                    className="flex-1 py-3 rounded-xl border border-border bg-surfaceLight items-center active:scale-[0.98]"
-                  >
-                    <Text className="text-textSecondary text-[13px] font-inter-medium">Cancelar</Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={addRepuesto}
-                    disabled={!canAddRepuesto}
-                    className={`flex-1 py-3 rounded-xl items-center active:scale-[0.98] ${
-                      canAddRepuesto ? "bg-accent" : "bg-surfaceLight"
-                    }`}
-                  >
-                    <Text
-                      className={`text-[13px] font-inter-semibold ${
-                        canAddRepuesto ? "text-white" : "text-textMuted"
-                      }`}
-                    >
-                      Agregar
+                {loadingRepuestos ? (
+                  <View className="py-6 items-center">
+                    <ActivityIndicator size="small" color="#3B82F6" />
+                  </View>
+                ) : filteredRepuestos.length === 0 ? (
+                  <View className="py-6 items-center gap-2">
+                    <Feather name="package" size={22} color="#444" />
+                    <Text className="text-[#555] text-[13px] font-inter-regular">
+                      {allRepuestos.length === 0 ? "No hay repuestos registrados" : "Sin resultados"}
                     </Text>
-                  </Pressable>
-                </View>
+                  </View>
+                ) : (
+                  <ScrollView nestedScrollEnabled style={{ maxHeight: 260 }}>
+                    {filteredRepuestos.map((r, idx) => {
+                      const isChecked = selectedIds.includes(r.id);
+                      const tc = repuestoTipoConfig[r.tipo] || repuestoTipoConfig.mecanico;
+                      return (
+                        <Pressable
+                          key={r.id}
+                          onPress={() => toggleRepuesto(r.id)}
+                          className="px-4 py-3.5 flex-row items-center gap-3 active:bg-surfaceLight"
+                          style={{
+                            borderTopWidth: idx > 0 ? 1 : 0,
+                            borderTopColor: "#2A2A2A",
+                            backgroundColor: isChecked ? "rgba(59,130,246,0.05)" : "transparent",
+                          }}
+                        >
+                          {/* Checkbox */}
+                          <View
+                            className="w-5 h-5 rounded-md items-center justify-center border-[1.5px]"
+                            style={{
+                              borderColor: isChecked ? "#3B82F6" : "#444",
+                              backgroundColor: isChecked ? "#3B82F6" : "transparent",
+                            }}
+                          >
+                            {isChecked && <Feather name="check" size={12} color="#FFF" />}
+                          </View>
+
+                          <View className="flex-1">
+                            <View className="flex-row items-center gap-2 mb-0.5">
+                              <Text className="text-textPrimary text-[14px] font-inter-medium flex-1" numberOfLines={1}>
+                                {r.nombre}
+                              </Text>
+                              <View className="px-1.5 py-0.5 rounded-[6px]" style={{ backgroundColor: tc.bg }}>
+                                <Text className="text-[10px] font-inter-medium capitalize" style={{ color: tc.color }}>
+                                  {r.tipo}
+                                </Text>
+                              </View>
+                            </View>
+                            <Text className="text-[#666] text-[12px] font-inter-regular">
+                              {[
+                                r.codigo && `#${r.codigo}`,
+                                r.cantidad_disponible > 0 && `x${r.cantidad_disponible}`,
+                                r.proveedor,
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </Text>
+                          </View>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                )}
               </View>
             )}
 
-            {repuestosDraft.length === 0 && !showRepuestoForm && (
-              <Text className="text-[#555] text-[13px] font-inter-regular text-center py-2">
-                Sin repuestos añadidos
+            {selectedIds.length === 0 && !showRepuestoList && (
+              <Text className="text-[#555] text-[13px] font-inter-regular text-center py-1">
+                Sin repuestos seleccionados
               </Text>
             )}
           </View>
@@ -680,20 +549,14 @@ export default function AddMantenimientoModal({
           <Pressable
             onPress={handleSubmit}
             disabled={loading || !canSubmit}
-            className={`${
-              canSubmit ? "bg-accent" : "bg-surfaceLight"
-            } py-4 rounded-2xl items-center ${
+            className={`${canSubmit ? "bg-accent" : "bg-surfaceLight"} py-4 rounded-2xl items-center ${
               loading ? "opacity-70" : ""
             } active:scale-[0.98]`}
           >
             {loading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text
-                className={`${
-                  canSubmit ? "text-white" : "text-textMuted"
-                } text-base font-inter-semibold`}
-              >
+              <Text className={`${canSubmit ? "text-white" : "text-textMuted"} text-base font-inter-semibold`}>
                 Guardar Mantenimiento
               </Text>
             )}

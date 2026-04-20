@@ -16,7 +16,7 @@ import DatePicker from "../../components/DatePicker";
 import { api, resetWakeUp } from "../../services/api";
 import { Maquina } from "../../types/maquina";
 import { Mantenimiento } from "../../types/mantenimiento";
-import AddMantenimientoModal, { RepuestoDraft } from "../../components/AddMantenimientoModal";
+import AddMantenimientoModal from "../../components/AddMantenimientoModal";
 import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
 import { useToast } from "../../context/ToastContext";
 import { MantenimientosListSkeleton } from "../../components/Skeleton";
@@ -113,7 +113,7 @@ export default function MantenimientosScreen() {
     fotos_uris: string[];
     costo_total: number;
     tipo: string;
-    repuestos_draft: RepuestoDraft[];
+    selected_repuesto_ids: string[];
   }) => {
     const fotos_urls: string[] = [];
     for (const uri of data.fotos_uris) {
@@ -138,26 +138,16 @@ export default function MantenimientosScreen() {
       });
       setMantenimientos((prev) => [newMant, ...prev]);
 
-      for (const rep of data.repuestos_draft) {
+      for (const repId of data.selected_repuesto_ids) {
         try {
-          await api.createRepuesto({
-            mantenimiento_id: newMant.id,
-            nombre: rep.nombre,
-            codigo: rep.codigo,
-            tipo: rep.tipo,
-            cantidad_disponible: rep.cantidad_disponible,
-            costo_unitario: rep.costo_unitario,
-            proveedor: rep.proveedor,
-            fecha: new Date().toISOString(),
-            imagen_url: null,
-          });
+          await api.updateRepuesto(repId, { mantenimiento_id: newMant.id });
         } catch {
-          // non-blocking: mantenimiento already saved
+          // non-blocking
         }
       }
 
-      const suffix = data.repuestos_draft.length > 0
-        ? ` y ${data.repuestos_draft.length} repuesto${data.repuestos_draft.length > 1 ? "s" : ""}`
+      const suffix = data.selected_repuesto_ids.length > 0
+        ? ` y ${data.selected_repuesto_ids.length} repuesto${data.selected_repuesto_ids.length > 1 ? "s" : ""} vinculados`
         : "";
       showToast("success", `Mantenimiento creado${suffix}`);
     } catch {

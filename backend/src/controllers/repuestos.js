@@ -37,6 +37,7 @@ const create = async (req, res) => {
   const {
     mantenimiento_id,
     nombre,
+    codigo,
     tipo,
     cantidad_disponible,
     costo_unitario,
@@ -71,6 +72,7 @@ const create = async (req, res) => {
     .insert({
       mantenimiento_id,
       nombre: nombre.trim(),
+      codigo: codigo?.trim() || null,
       tipo,
       cantidad_disponible: cantidad_disponible || 0,
       costo_unitario: costo_unitario || 0,
@@ -100,7 +102,9 @@ const remove = async (req, res) => {
 const update = async (req, res) => {
   const { id } = req.params;
   const {
+    mantenimiento_id,
     nombre,
+    codigo,
     tipo,
     cantidad_disponible,
     costo_unitario,
@@ -123,7 +127,17 @@ const update = async (req, res) => {
 
   const { data, error } = await supabase
     .from('repuestos')
-    .update({ nombre, tipo, cantidad_disponible, costo_unitario, proveedor, fecha, imagen_url })
+    .update({
+      ...(mantenimiento_id !== undefined && { mantenimiento_id }),
+      ...(nombre !== undefined && { nombre }),
+      ...(codigo !== undefined && { codigo: codigo?.trim() || null }),
+      ...(tipo !== undefined && { tipo }),
+      ...(cantidad_disponible !== undefined && { cantidad_disponible }),
+      ...(costo_unitario !== undefined && { costo_unitario }),
+      ...(proveedor !== undefined && { proveedor }),
+      ...(fecha !== undefined && { fecha }),
+      ...(imagen_url !== undefined && { imagen_url }),
+    })
     .eq('id', id)
     .select('*, mantenimientos(descripcion, maquina_id, maquinas(nombre))')
     .single();

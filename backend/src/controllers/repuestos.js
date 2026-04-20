@@ -18,16 +18,32 @@ const getById = async (req, res) => {
 const getAll = async (req, res) => {
   const { mantenimiento_id } = req.query;
 
-  let query = supabase
+  if (mantenimiento_id) {
+    // Use junction table for many-to-many lookup
+    const { data: junction, error: jErr } = await supabase
+      .from('mantenimiento_repuestos')
+      .select('repuesto_id')
+      .eq('mantenimiento_id', mantenimiento_id);
+
+    if (jErr) return res.status(getHttpStatus(jErr)).json({ error: jErr.message });
+
+    const ids = (junction || []).map((r) => r.repuesto_id);
+    if (ids.length === 0) return res.json([]);
+
+    const { data, error } = await supabase
+      .from('repuestos')
+      .select('*, mantenimientos(descripcion, maquina_id, maquinas(nombre))')
+      .in('id', ids)
+      .order('created_at', { ascending: false });
+
+    if (error) return res.status(getHttpStatus(error)).json({ error: error.message });
+    return res.json(data);
+  }
+
+  const { data, error } = await supabase
     .from('repuestos')
     .select('*, mantenimientos(descripcion, maquina_id, maquinas(nombre))')
     .order('created_at', { ascending: false });
-
-  if (mantenimiento_id) {
-    query = query.eq('mantenimiento_id', mantenimiento_id);
-  }
-
-  const { data, error } = await query;
 
   if (error) return res.status(getHttpStatus(error)).json({ error: error.message });
   res.json(data);
@@ -47,7 +63,6 @@ const create = async (req, res) => {
   } = req.body;
 
   const missing = [];
-  if (!mantenimiento_id) missing.push('mantenimiento');
   if (!nombre || !nombre.trim()) missing.push('nombre');
   if (!tipo) missing.push('tipo');
 
@@ -70,7 +85,7 @@ const create = async (req, res) => {
   const { data, error } = await supabase
     .from('repuestos')
     .insert({
-      mantenimiento_id,
+      mantenimiento_id: mantenimiento_id || null,
       nombre: nombre.trim(),
       codigo: codigo?.trim() || null,
       tipo,
@@ -102,7 +117,6 @@ const remove = async (req, res) => {
 const update = async (req, res) => {
   const { id } = req.params;
   const {
-    mantenimiento_id,
     nombre,
     codigo,
     tipo,
@@ -128,7 +142,6 @@ const update = async (req, res) => {
   const { data, error } = await supabase
     .from('repuestos')
     .update({
-      ...(mantenimiento_id !== undefined && { mantenimiento_id }),
       ...(nombre !== undefined && { nombre }),
       ...(codigo !== undefined && { codigo: codigo?.trim() || null }),
       ...(tipo !== undefined && { tipo }),

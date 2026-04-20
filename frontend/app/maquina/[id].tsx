@@ -155,7 +155,7 @@ export default function MaquinaDetailScreen() {
 
       for (const repId of data.selected_repuesto_ids) {
         try {
-          await api.updateRepuesto(repId, { mantenimiento_id: newMant.id });
+          await api.linkRepuesto(newMant.id, repId);
         } catch {
           // non-blocking
         }

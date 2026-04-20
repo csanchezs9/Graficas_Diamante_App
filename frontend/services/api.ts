@@ -255,6 +255,23 @@ export const api = {
     return res.json();
   },
 
+  async linkRepuesto(mantenimiento_id: string, repuesto_id: string): Promise<void> {
+    const res = await fetchWithTimeout(`${API_URL}/mantenimientos/${mantenimiento_id}/repuestos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ repuesto_id }),
+    });
+    if (!res.ok) throw new Error("Error al vincular repuesto");
+  },
+
+  async unlinkRepuesto(mantenimiento_id: string, repuesto_id: string): Promise<void> {
+    const res = await fetchWithTimeout(
+      `${API_URL}/mantenimientos/${mantenimiento_id}/repuestos/${repuesto_id}`,
+      { method: "DELETE" }
+    );
+    if (!res.ok) throw new Error("Error al desvincular repuesto");
+  },
+
   // Health
   async getDbHealth(): Promise<{
     status: string;

@@ -1,7 +1,8 @@
 export interface Repuesto {
   id: string;
-  mantenimiento_id: string;
+  mantenimiento_id?: string | null;
   nombre: string;
+  codigo?: string;
   tipo: string;
   cantidad_disponible: number;
   costo_unitario: number;

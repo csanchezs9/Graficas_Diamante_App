@@ -22,8 +22,9 @@ interface Props {
   mantenimientos: Mantenimiento[];
   onClose: () => void;
   onSubmit: (data: {
-    mantenimiento_id: string;
+    mantenimiento_id: string | null;
     nombre: string;
+    codigo: string;
     tipo: string;
     cantidad_disponible: number;
     costo_unitario: number;
@@ -48,6 +49,7 @@ export default function AddRepuestoModal({
   const [mantSearch, setMantSearch] = useState("");
   const [showMantMenu, setShowMantMenu] = useState(false);
   const [nombre, setNombre] = useState("");
+  const [codigo, setCodigo] = useState("");
   const [tipo, setTipo] = useState("mecanico");
   const [cantidad, setCantidad] = useState("");
   const [costoUnitario, setCostoUnitario] = useState("");
@@ -58,6 +60,7 @@ export default function AddRepuestoModal({
   const [loading, setLoading] = useState(false);
 
   const nombreRef = useRef<TextInput>(null);
+  const codigoRef = useRef<TextInput>(null);
   const cantidadRef = useRef<TextInput>(null);
   const costoRef = useRef<TextInput>(null);
   const proveedorRef = useRef<TextInput>(null);
@@ -67,6 +70,7 @@ export default function AddRepuestoModal({
       setMantenimientoId("");
       setMantSearch("");
       setNombre("");
+      setCodigo("");
       setTipo("mecanico");
       setCantidad("");
       setCostoUnitario("");
@@ -99,15 +103,16 @@ export default function AddRepuestoModal({
 
   const selectedMant = mantenimientos.find((m) => m.id === mantenimientoId);
 
-  const canSubmit = mantenimientoId && nombre.trim();
+  const canSubmit = nombre.trim();
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setLoading(true);
     try {
       await onSubmit({
-        mantenimiento_id: mantenimientoId,
+        mantenimiento_id: mantenimientoId || null,
         nombre: nombre.trim(),
+        codigo: codigo.trim(),
         tipo,
         cantidad_disponible: Math.max(0, parseInt(cantidad) || 0),
         costo_unitario: Math.max(0, parseCurrency(costoUnitario)),
@@ -188,7 +193,7 @@ export default function AddRepuestoModal({
 
           {/* Mantenimiento selector con busqueda */}
           <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
-            Mantenimiento Asociado *
+            Mantenimiento Asociado
           </Text>
           {selectedMant && !showMantMenu ? (
             <Pressable
@@ -327,9 +332,26 @@ export default function AddRepuestoModal({
             placeholder="Nombre del repuesto"
             placeholderTextColor="#555"
             returnKeyType="next"
-            onSubmitEditing={() => cantidadRef.current?.focus()}
+            onSubmitEditing={() => codigoRef.current?.focus()}
             blurOnSubmit={false}
             maxLength={100}
+            className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
+          />
+
+          {/* Codigo */}
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Código
+          </Text>
+          <TextInput
+            ref={codigoRef}
+            value={codigo}
+            onChangeText={setCodigo}
+            placeholder="Código de referencia"
+            placeholderTextColor="#555"
+            returnKeyType="next"
+            onSubmitEditing={() => cantidadRef.current?.focus()}
+            blurOnSubmit={false}
+            maxLength={60}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 

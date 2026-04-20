@@ -67,8 +67,9 @@ export default function RepuestosScreen() {
   };
 
   const handleCreate = async (data: {
-    mantenimiento_id: string;
+    mantenimiento_id: string | null;
     nombre: string;
+    codigo: string;
     tipo: string;
     cantidad_disponible: number;
     costo_unitario: number;
@@ -90,6 +91,7 @@ export default function RepuestosScreen() {
       const newRep = await api.createRepuesto({
         mantenimiento_id: data.mantenimiento_id,
         nombre: data.nombre,
+        codigo: data.codigo,
         tipo: data.tipo,
         cantidad_disponible: data.cantidad_disponible,
         costo_unitario: data.costo_unitario,

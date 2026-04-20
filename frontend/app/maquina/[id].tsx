@@ -15,7 +15,7 @@ import { Maquina } from "../../types/maquina";
 import { Mantenimiento } from "../../types/mantenimiento";
 import { api } from "../../services/api";
 import EditMaquinaModal from "../../components/EditMaquinaModal";
-import AddMantenimientoModal from "../../components/AddMantenimientoModal";
+import AddMantenimientoModal, { RepuestoDraft } from "../../components/AddMantenimientoModal";
 import LinkedItemCard from "../../components/LinkedItemCard";
 import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
 import { useToast } from "../../context/ToastContext";
@@ -129,6 +129,7 @@ export default function MaquinaDetailScreen() {
     fotos_uris: string[];
     costo_total: number;
     tipo: string;
+    repuestos_draft: RepuestoDraft[];
   }) => {
     const fotos_urls: string[] = [];
     for (const uri of data.fotos_uris) {
@@ -151,7 +152,29 @@ export default function MaquinaDetailScreen() {
         tipo: data.tipo,
       });
       setMantenimientos((prev) => [newMant, ...prev]);
-      showToast("success", "Mantenimiento creado correctamente");
+
+      for (const rep of data.repuestos_draft) {
+        try {
+          await api.createRepuesto({
+            mantenimiento_id: newMant.id,
+            nombre: rep.nombre,
+            codigo: rep.codigo,
+            tipo: rep.tipo,
+            cantidad_disponible: rep.cantidad_disponible,
+            costo_unitario: rep.costo_unitario,
+            proveedor: rep.proveedor,
+            fecha: new Date().toISOString(),
+            imagen_url: null,
+          });
+        } catch {
+          // non-blocking
+        }
+      }
+
+      const suffix = data.repuestos_draft.length > 0
+        ? ` y ${data.repuestos_draft.length} repuesto${data.repuestos_draft.length > 1 ? "s" : ""}`
+        : "";
+      showToast("success", `Mantenimiento creado${suffix}`);
     } catch {
       showToast("error", "No se pudo crear el mantenimiento");
       throw new Error("create_failed");

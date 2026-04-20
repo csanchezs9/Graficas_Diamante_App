@@ -30,6 +30,7 @@ interface Props {
     costo_total: number;
     tipo: string;
   }) => Promise<void>;
+  defaultMaquinaId?: string;
 }
 
 const tipoOptions = [
@@ -42,6 +43,7 @@ export default function AddMantenimientoModal({
   maquinas,
   onClose,
   onSubmit,
+  defaultMaquinaId,
 }: Props) {
   const [maquinaId, setMaquinaId] = useState("");
   const [showMaquinaMenu, setShowMaquinaMenu] = useState(false);
@@ -61,7 +63,7 @@ export default function AddMantenimientoModal({
 
   useEffect(() => {
     if (visible) {
-      setMaquinaId("");
+      setMaquinaId(defaultMaquinaId ?? "");
       setFechaRealizacion(new Date());
       setTecnico("");
       setDescripcion("");
@@ -190,70 +192,84 @@ export default function AddMantenimientoModal({
           <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
             Maquina *
           </Text>
-          <Pressable
-            onPress={() => setShowMaquinaMenu(!showMaquinaMenu)}
-            className={`bg-surfaceLight border rounded-2xl px-4 py-3.5 flex-row items-center justify-between active:scale-[0.98] ${
-              showMaquinaMenu ? "border-accent mb-1.5" : "border-border mb-5"
-            }`}
-          >
-            <Text
-              className={`text-base font-inter-regular ${
-                selectedMaquina ? "text-textPrimary" : "text-[#555]"
-              }`}
-            >
-              {selectedMaquina?.nombre || "Seleccionar maquina"}
-            </Text>
-            <Feather
-              name={showMaquinaMenu ? "chevron-up" : "chevron-down"}
-              size={18}
-              color="#A0A0A0"
-            />
-          </Pressable>
-          {showMaquinaMenu && (
-            <View className="bg-surfaceLight border border-border rounded-xl mb-5 max-h-[200px] overflow-hidden">
-              <ScrollView nestedScrollEnabled>
-                {maquinas.map((m, idx) => {
-                  const isSelected = maquinaId === m.id;
-                  return (
-                    <Pressable
-                      key={m.id}
-                      onPress={() => {
-                        setMaquinaId(m.id);
-                        setShowMaquinaMenu(false);
-                      }}
-                      className="px-4 py-3.5 flex-row items-center justify-between"
-                      style={{
-                        backgroundColor: isSelected
-                          ? "rgba(59,130,246,0.08)"
-                          : "transparent",
-                        borderTopWidth: idx > 0 ? 1 : 0,
-                        borderTopColor: "#2A2A2A",
-                      }}
-                    >
-                      <View className="flex-row items-center gap-2.5">
-                        <Feather
-                          name="settings"
-                          size={14}
-                          color={isSelected ? "#3B82F6" : "#555"}
-                        />
-                        <Text
-                          className={`text-[15px] ${
-                            isSelected
-                              ? "font-inter-medium text-[#60A5FA]"
-                              : "font-inter-regular text-textSecondary"
-                          }`}
-                        >
-                          {m.nombre}
-                        </Text>
-                      </View>
-                      {isSelected && (
-                        <Feather name="check" size={16} color="#60A5FA" />
-                      )}
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
+          {defaultMaquinaId ? (
+            <View className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 flex-row items-center justify-between mb-5">
+              <View className="flex-row items-center gap-2.5">
+                <Feather name="settings" size={14} color="#3B82F6" />
+                <Text className="text-base font-inter-regular text-textPrimary">
+                  {selectedMaquina?.nombre || "Máquina seleccionada"}
+                </Text>
+              </View>
+              <Feather name="lock" size={14} color="#555" />
             </View>
+          ) : (
+            <>
+              <Pressable
+                onPress={() => setShowMaquinaMenu(!showMaquinaMenu)}
+                className={`bg-surfaceLight border rounded-2xl px-4 py-3.5 flex-row items-center justify-between active:scale-[0.98] ${
+                  showMaquinaMenu ? "border-accent mb-1.5" : "border-border mb-5"
+                }`}
+              >
+                <Text
+                  className={`text-base font-inter-regular ${
+                    selectedMaquina ? "text-textPrimary" : "text-[#555]"
+                  }`}
+                >
+                  {selectedMaquina?.nombre || "Seleccionar maquina"}
+                </Text>
+                <Feather
+                  name={showMaquinaMenu ? "chevron-up" : "chevron-down"}
+                  size={18}
+                  color="#A0A0A0"
+                />
+              </Pressable>
+              {showMaquinaMenu && (
+                <View className="bg-surfaceLight border border-border rounded-xl mb-5 max-h-[200px] overflow-hidden">
+                  <ScrollView nestedScrollEnabled>
+                    {maquinas.map((m, idx) => {
+                      const isSelected = maquinaId === m.id;
+                      return (
+                        <Pressable
+                          key={m.id}
+                          onPress={() => {
+                            setMaquinaId(m.id);
+                            setShowMaquinaMenu(false);
+                          }}
+                          className="px-4 py-3.5 flex-row items-center justify-between"
+                          style={{
+                            backgroundColor: isSelected
+                              ? "rgba(59,130,246,0.08)"
+                              : "transparent",
+                            borderTopWidth: idx > 0 ? 1 : 0,
+                            borderTopColor: "#2A2A2A",
+                          }}
+                        >
+                          <View className="flex-row items-center gap-2.5">
+                            <Feather
+                              name="settings"
+                              size={14}
+                              color={isSelected ? "#3B82F6" : "#555"}
+                            />
+                            <Text
+                              className={`text-[15px] ${
+                                isSelected
+                                  ? "font-inter-medium text-[#60A5FA]"
+                                  : "font-inter-regular text-textSecondary"
+                              }`}
+                            >
+                              {m.nombre}
+                            </Text>
+                          </View>
+                          {isSelected && (
+                            <Feather name="check" size={16} color="#60A5FA" />
+                          )}
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+              )}
+            </>
           )}
 
           {/* Fecha */}

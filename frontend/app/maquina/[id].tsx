@@ -15,6 +15,7 @@ import { Maquina } from "../../types/maquina";
 import { Mantenimiento } from "../../types/mantenimiento";
 import { api } from "../../services/api";
 import EditMaquinaModal from "../../components/EditMaquinaModal";
+import AddMantenimientoModal from "../../components/AddMantenimientoModal";
 import LinkedItemCard from "../../components/LinkedItemCard";
 import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
 import { useToast } from "../../context/ToastContext";
@@ -40,6 +41,7 @@ export default function MaquinaDetailScreen() {
   const [imagePreviewVisible, setImagePreviewVisible] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [addMantenimientoVisible, setAddMantenimientoVisible] = useState(false);
   const [mantenimientos, setMantenimientos] = useState<Mantenimiento[]>([]);
   const [confirm, setConfirm] = useState<{ visible: boolean; title: string; message: string; actions: ConfirmDialogAction[]; icon?: any }>({
     visible: false, title: "", message: "", actions: [],
@@ -117,6 +119,43 @@ export default function MaquinaDetailScreen() {
     setMaquina(updated);
     setImgError(false);
     showToast("success", "Máquina actualizada");
+  };
+
+  const handleCreateMantenimiento = async (data: {
+    maquina_id: string;
+    fecha_realizacion: string;
+    tecnico_responsable: string;
+    descripcion: string;
+    fotos_uris: string[];
+    costo_total: number;
+    tipo: string;
+  }) => {
+    const fotos_urls: string[] = [];
+    for (const uri of data.fotos_uris) {
+      try {
+        const url = await api.uploadImage(uri, "trabajo");
+        fotos_urls.push(url);
+      } catch {
+        showToast("error", "No se pudo subir una imagen. Intenta de nuevo.");
+        throw new Error("upload_failed");
+      }
+    }
+    try {
+      const newMant = await api.createMantenimiento({
+        maquina_id: data.maquina_id,
+        fecha_realizacion: data.fecha_realizacion,
+        tecnico_responsable: data.tecnico_responsable,
+        descripcion: data.descripcion,
+        fotos_urls,
+        costo_total: data.costo_total,
+        tipo: data.tipo,
+      });
+      setMantenimientos((prev) => [newMant, ...prev]);
+      showToast("success", "Mantenimiento creado correctamente");
+    } catch {
+      showToast("error", "No se pudo crear el mantenimiento");
+      throw new Error("create_failed");
+    }
   };
 
   const closeConfirm = () => setConfirm((prev) => ({ ...prev, visible: false }));
@@ -345,16 +384,27 @@ export default function MaquinaDetailScreen() {
           {/* Mantenimientos section */}
           <View className="mt-2">
             <View className="flex-row items-center justify-between mb-3">
-              <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-1.5">
-                Mantenimientos
-              </Text>
-              {mantenimientos.length > 0 && (
-                <View className="bg-accent/[0.12] px-2 py-0.5 rounded-[10px]">
-                  <Text className="text-accent text-[11px] font-inter-semibold">
-                    {mantenimientos.length}
-                  </Text>
-                </View>
-              )}
+              <View className="flex-row items-center gap-2">
+                <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest">
+                  Mantenimientos
+                </Text>
+                {mantenimientos.length > 0 && (
+                  <View className="bg-accent/[0.12] px-2 py-0.5 rounded-[10px]">
+                    <Text className="text-accent text-[11px] font-inter-semibold">
+                      {mantenimientos.length}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <Pressable
+                onPress={() => setAddMantenimientoVisible(true)}
+                accessibilityRole="button"
+                accessibilityLabel="Añadir mantenimiento"
+                className="flex-row items-center gap-1.5 bg-accent/[0.08] border border-accent/20 px-3 py-1.5 rounded-xl active:scale-[0.98]"
+              >
+                <Feather name="plus" size={14} color="#3B82F6" />
+                <Text className="text-accent text-[12px] font-inter-medium">Añadir</Text>
+              </Pressable>
             </View>
 
             {mantenimientos.length === 0 ? (
@@ -471,6 +521,15 @@ export default function MaquinaDetailScreen() {
         maquina={maquina}
         onClose={() => setEditModalVisible(false)}
         onSubmit={handleEdit}
+      />
+
+      {/* Add mantenimiento modal */}
+      <AddMantenimientoModal
+        visible={addMantenimientoVisible}
+        maquinas={maquina ? [maquina] : []}
+        defaultMaquinaId={maquina?.id}
+        onClose={() => setAddMantenimientoVisible(false)}
+        onSubmit={handleCreateMantenimiento}
       />
       <ConfirmDialog
         visible={confirm.visible}

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import { Maquina } from "../../types/maquina";
 import { Mantenimiento } from "../../types/mantenimiento";
 import AddMantenimientoModal from "../../components/AddMantenimientoModal";
 import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
+import DeletePasswordModal from "../../components/DeletePasswordModal";
 import { useToast } from "../../context/ToastContext";
 import { MantenimientosListSkeleton } from "../../components/Skeleton";
 
@@ -42,6 +43,8 @@ export default function MantenimientosScreen() {
     visible: false, title: "", message: "", actions: [],
   });
   const { showToast } = useToast();
+  const pendingDeleteRef = useRef<{ id: string; pin: string }>({ id: "", pin: "" });
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
 
   // Extract unique technicians
   const uniqueTecnicos = useMemo(() => {
@@ -162,57 +165,52 @@ export default function MantenimientosScreen() {
   const closeConfirm = () => setConfirm((prev) => ({ ...prev, visible: false }));
 
   const handleDelete = (id: string) => {
-    setConfirm({
-      visible: true,
-      title: "Eliminar mantenimiento",
-      message: "¿Estás seguro de que deseas eliminarlo? Esta acción no se puede deshacer.",
-      icon: "trash-2",
-      actions: [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await api.deleteMantenimiento(id);
-              closeConfirm();
-              setMantenimientos((prev) => prev.filter((m) => m.id !== id));
-              showToast("success", "Mantenimiento eliminado correctamente");
-            } catch (err: any) {
-              if (err.status === 409) {
-                setConfirm({
-                  visible: true,
-                  title: "Tiene registros asociados",
-                  message: `${err.message}\n\n¿Deseas eliminar el mantenimiento junto con todos sus repuestos?`,
-                  icon: "alert-triangle",
-                  actions: [
-                    { text: "Cancelar", style: "cancel" },
-                    {
-                      text: "Eliminar todo",
-                      style: "destructive",
-                      onPress: async () => {
-                        try {
-                          await api.deleteMantenimiento(id, true);
-                          closeConfirm();
-                          setMantenimientos((prev) => prev.filter((m) => m.id !== id));
-                          showToast("success", "Mantenimiento y repuestos eliminados");
-                        } catch (e: any) {
-                          closeConfirm();
-                          showToast("error", e.message || "No se pudo eliminar");
-                        }
-                      },
-                    },
-                  ],
-                });
-              } else {
-                closeConfirm();
-                showToast("error", err.message || "No se pudo eliminar");
-              }
-            }
-          },
-        },
-      ],
-    });
+    pendingDeleteRef.current = { id, pin: "" };
+    setPasswordModalVisible(true);
+  };
+
+  const handleDeleteWithPin = async (pin: string) => {
+    const { id } = pendingDeleteRef.current;
+    try {
+      await api.deleteMantenimiento(id, false, pin);
+      setPasswordModalVisible(false);
+      setMantenimientos((prev) => prev.filter((m) => m.id !== id));
+      showToast("success", "Mantenimiento eliminado correctamente");
+    } catch (err: any) {
+      if (err.status === 409) {
+        pendingDeleteRef.current.pin = pin;
+        setPasswordModalVisible(false);
+        setConfirm({
+          visible: true,
+          title: "Tiene registros asociados",
+          message: `${err.message}\n\n¿Deseas eliminar el mantenimiento junto con todos sus repuestos?`,
+          icon: "alert-triangle",
+          actions: [
+            { text: "Cancelar", style: "cancel" },
+            {
+              text: "Eliminar todo",
+              style: "destructive",
+              onPress: async () => {
+                try {
+                  await api.deleteMantenimiento(pendingDeleteRef.current.id, true, pendingDeleteRef.current.pin);
+                  closeConfirm();
+                  setMantenimientos((prev) => prev.filter((m) => m.id !== pendingDeleteRef.current.id));
+                  showToast("success", "Mantenimiento y repuestos eliminados");
+                } catch (e: any) {
+                  closeConfirm();
+                  showToast("error", e.message || "No se pudo eliminar");
+                }
+              },
+            },
+          ],
+        });
+      } else if (err.status === 401) {
+        throw err;
+      } else {
+        setPasswordModalVisible(false);
+        showToast("error", err.message || "No se pudo eliminar");
+      }
+    }
   };
 
   const renderItem = ({ item }: { item: Mantenimiento }) => {
@@ -555,6 +553,11 @@ export default function MantenimientosScreen() {
         maquinas={maquinas}
         onClose={() => setModalVisible(false)}
         onSubmit={handleCreate}
+      />
+      <DeletePasswordModal
+        visible={passwordModalVisible}
+        onClose={() => setPasswordModalVisible(false)}
+        onSubmit={handleDeleteWithPin}
       />
       <ConfirmDialog
         visible={confirm.visible}

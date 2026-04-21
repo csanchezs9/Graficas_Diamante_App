@@ -282,17 +282,7 @@ export async function generateRepuestasPDF(repuestos: Repuesto[]): Promise<void>
       </div>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th style="width:32px;">#</th>
-          <th>Nombre</th>
-          <th>Código</th>
-          <th style="text-align:center;">Cantidad</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <table><thead><tr><th style="width:32px;">#</th><th>Nombre</th><th>Código</th><th style="text-align:center;">Cantidad</th></tr></thead><tbody>${rows}</tbody></table>
 
     <div class="footer">Graficas Diamante App · Inventario generado automaticamente</div>
   </body>

@@ -15,6 +15,7 @@ import * as ImagePicker from "expo-image-picker";
 import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import DatePicker from "./DatePicker";
 import { Maquina } from "../types/maquina";
+import { parseDate, toLocalISOString } from "../utils/date";
 
 interface Props {
   visible: boolean;
@@ -70,9 +71,7 @@ export default function EditMaquinaModal({ visible, maquina, onClose, onSubmit }
       setImagenUrlExisting(maquina.imagen_url || null);
       setEstado(capitalizeEstado(maquina.estado || "en uso"));
       setFechaInspeccion(
-        maquina.fecha_ultima_inspeccion
-          ? new Date(maquina.fecha_ultima_inspeccion)
-          : null
+        parseDate(maquina.fecha_ultima_inspeccion)
       );
       setShowEstadoMenu(false);
       setShowDatePicker(false);
@@ -99,7 +98,7 @@ export default function EditMaquinaModal({ visible, maquina, onClose, onSubmit }
       setShowDatePicker(false);
     }
     if (selectedDate) {
-      setFechaInspeccion(selectedDate);
+      setFechaInspeccion(new Date(selectedDate.getUTCFullYear(), selectedDate.getUTCMonth(), selectedDate.getUTCDate()));
     }
   };
 
@@ -116,7 +115,7 @@ export default function EditMaquinaModal({ visible, maquina, onClose, onSubmit }
         imagen_url_existing: imagenUrlExisting,
         estado: estado.toLowerCase(),
         fecha_ultima_inspeccion: fechaInspeccion
-          ? fechaInspeccion.toISOString()
+          ? toLocalISOString(fechaInspeccion)
           : null,
       });
       onClose();

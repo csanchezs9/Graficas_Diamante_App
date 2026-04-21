@@ -18,6 +18,7 @@ import { Maquina } from "../types/maquina";
 import { Repuesto } from "../types/repuesto";
 import { api } from "../services/api";
 import { formatCurrency, parseCurrency } from "../utils/currency";
+import { toLocalISOString } from "../utils/date";
 
 interface Props {
   visible: boolean;
@@ -125,7 +126,9 @@ export default function AddMantenimientoModal({
 
   const onDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === "android") setShowDatePicker(false);
-    if (selectedDate) setFechaRealizacion(selectedDate);
+    if (selectedDate) {
+      setFechaRealizacion(new Date(selectedDate.getUTCFullYear(), selectedDate.getUTCMonth(), selectedDate.getUTCDate()));
+    }
   };
 
   const toggleRepuesto = (id: string) => {
@@ -154,7 +157,7 @@ export default function AddMantenimientoModal({
     try {
       await onSubmit({
         maquina_id: maquinaId,
-        fecha_realizacion: fechaRealizacion.toISOString(),
+        fecha_realizacion: toLocalISOString(fechaRealizacion),
         tecnico_responsable: tecnico.trim(),
         descripcion: descripcion.trim(),
         fotos_uris: fotosUris,

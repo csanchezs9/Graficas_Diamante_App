@@ -16,6 +16,7 @@ import { api } from "../../services/api";
 import EditRepuestoModal from "../../components/EditRepuestoModal";
 import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
 import { useToast } from "../../context/ToastContext";
+import { parseDate } from "../../utils/date";
 import { DetailSkeleton } from "../../components/Skeleton";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -90,6 +91,7 @@ export default function RepuestoDetailScreen() {
 
   const handleEdit = async (editData: {
     nombre: string;
+    codigo: string;
     tipo: string;
     cantidad_disponible: number;
     costo_unitario: number;
@@ -122,6 +124,7 @@ export default function RepuestoDetailScreen() {
 
     const updated = await api.updateRepuesto(repuesto.id, {
       nombre: editData.nombre,
+      codigo: editData.codigo,
       tipo: editData.tipo,
       cantidad_disponible: editData.cantidad_disponible,
       costo_unitario: editData.costo_unitario,
@@ -256,6 +259,11 @@ export default function RepuestoDetailScreen() {
           {/* Info rows */}
           <View className="gap-2.5 mb-5">
             <InfoRow
+              icon="hash"
+              label="Código"
+              value={repuesto.codigo || null}
+            />
+            <InfoRow
               icon="layers"
               label="Cantidad Disponible"
               value={String(repuesto.cantidad_disponible)}
@@ -279,7 +287,7 @@ export default function RepuestoDetailScreen() {
               label="Fecha"
               value={
                 repuesto.fecha
-                  ? new Date(repuesto.fecha).toLocaleDateString("es-CO", {
+                  ? (parseDate(repuesto.fecha) ?? new Date()).toLocaleDateString("es-CO", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
@@ -292,7 +300,7 @@ export default function RepuestoDetailScreen() {
               label="Registrado"
               value={
                 repuesto.created_at
-                  ? new Date(repuesto.created_at).toLocaleDateString("es-CO", {
+                  ? (parseDate(repuesto.created_at) ?? new Date()).toLocaleDateString("es-CO", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",

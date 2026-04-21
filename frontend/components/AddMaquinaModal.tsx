@@ -14,6 +14,7 @@ import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import DatePicker from "./DatePicker";
+import { toLocalISOString } from "../utils/date";
 
 interface Props {
   visible: boolean;
@@ -85,7 +86,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
       setShowDatePicker(false);
     }
     if (selectedDate) {
-      setFechaInspeccion(selectedDate);
+      setFechaInspeccion(new Date(selectedDate.getUTCFullYear(), selectedDate.getUTCMonth(), selectedDate.getUTCDate()));
     }
   };
 
@@ -101,7 +102,7 @@ export default function AddMaquinaModal({ visible, onClose, onSubmit }: Props) {
         imagen_uri: imagenUri,
         estado: estado.toLowerCase(),
         fecha_ultima_inspeccion: fechaInspeccion
-          ? fechaInspeccion.toISOString()
+          ? toLocalISOString(fechaInspeccion)
           : null,
       });
       resetForm();

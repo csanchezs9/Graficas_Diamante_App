@@ -16,6 +16,7 @@ import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import DatePicker from "./DatePicker";
 import { Repuesto } from "../types/repuesto";
 import { formatCurrency, parseCurrency } from "../utils/currency";
+import { parseDate, toLocalISOString } from "../utils/date";
 
 interface Props {
   visible: boolean;
@@ -23,6 +24,7 @@ interface Props {
   onClose: () => void;
   onSubmit: (data: {
     nombre: string;
+    codigo: string;
     tipo: string;
     cantidad_disponible: number;
     costo_unitario: number;
@@ -45,6 +47,7 @@ export default function EditRepuestoModal({
   onSubmit,
 }: Props) {
   const [nombre, setNombre] = useState("");
+  const [codigo, setCodigo] = useState("");
   const [tipo, setTipo] = useState("mecanico");
   const [cantidad, setCantidad] = useState("");
   const [costoUnitario, setCostoUnitario] = useState("");
@@ -56,6 +59,7 @@ export default function EditRepuestoModal({
   const [loading, setLoading] = useState(false);
 
   const nombreRef = useRef<TextInput>(null);
+  const codigoRef = useRef<TextInput>(null);
   const cantidadRef = useRef<TextInput>(null);
   const costoRef = useRef<TextInput>(null);
   const proveedorRef = useRef<TextInput>(null);
@@ -63,6 +67,7 @@ export default function EditRepuestoModal({
   useEffect(() => {
     if (visible && repuesto) {
       setNombre(repuesto.nombre);
+      setCodigo(repuesto.codigo || "");
       setTipo(repuesto.tipo);
       setCantidad(
         repuesto.cantidad_disponible > 0
@@ -75,7 +80,7 @@ export default function EditRepuestoModal({
           : ""
       );
       setProveedor(repuesto.proveedor || "");
-      setFecha(repuesto.fecha ? new Date(repuesto.fecha) : new Date());
+      setFecha(parseDate(repuesto.fecha) ?? new Date());
       setImagenUrlExisting(repuesto.imagen_url || null);
       setImagenUriNew(null);
       setShowDatePicker(false);
@@ -84,7 +89,9 @@ export default function EditRepuestoModal({
 
   const onDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === "android") setShowDatePicker(false);
-    if (selectedDate) setFecha(selectedDate);
+    if (selectedDate) {
+      setFecha(new Date(selectedDate.getUTCFullYear(), selectedDate.getUTCMonth(), selectedDate.getUTCDate()));
+    }
   };
 
   const currentImage = imagenUriNew || imagenUrlExisting;
@@ -116,11 +123,12 @@ export default function EditRepuestoModal({
     try {
       await onSubmit({
         nombre: nombre.trim(),
+        codigo: codigo.trim(),
         tipo,
         cantidad_disponible: Math.max(0, parseInt(cantidad) || 0),
         costo_unitario: Math.max(0, parseCurrency(costoUnitario)),
         proveedor: proveedor.trim(),
-        fecha: fecha.toISOString(),
+        fecha: toLocalISOString(fecha),
         imagen_url_existing: imagenUrlExisting,
         imagen_uri_new: imagenUriNew,
       });
@@ -206,9 +214,26 @@ export default function EditRepuestoModal({
             placeholder="Nombre del repuesto"
             placeholderTextColor="#555"
             returnKeyType="next"
-            onSubmitEditing={() => cantidadRef.current?.focus()}
+            onSubmitEditing={() => codigoRef.current?.focus()}
             blurOnSubmit={false}
             maxLength={100}
+            className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
+          />
+
+          {/* Codigo */}
+          <Text className="text-textSecondary text-xs font-inter-medium uppercase tracking-widest mb-2">
+            Código
+          </Text>
+          <TextInput
+            ref={codigoRef}
+            value={codigo}
+            onChangeText={setCodigo}
+            placeholder="Código de referencia"
+            placeholderTextColor="#555"
+            returnKeyType="next"
+            onSubmitEditing={() => cantidadRef.current?.focus()}
+            blurOnSubmit={false}
+            maxLength={60}
             className="bg-surfaceLight border border-border rounded-2xl px-4 py-3.5 text-textPrimary text-base font-inter-regular mb-5"
           />
 

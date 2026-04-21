@@ -16,6 +16,7 @@ import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import DatePicker from "./DatePicker";
 import { Mantenimiento } from "../types/mantenimiento";
 import { formatCurrency, parseCurrency } from "../utils/currency";
+import { parseDate, toLocalISOString } from "../utils/date";
 
 interface Props {
   visible: boolean;
@@ -59,7 +60,7 @@ export default function EditMantenimientoModal({
 
   useEffect(() => {
     if (visible && mantenimiento) {
-      setFecha(new Date(mantenimiento.fecha_realizacion));
+      setFecha(parseDate(mantenimiento.fecha_realizacion) ?? new Date());
       setTecnico(mantenimiento.tecnico_responsable);
       setDescripcion(mantenimiento.descripcion);
       setCostoTotal(
@@ -101,7 +102,9 @@ export default function EditMantenimientoModal({
 
   const onDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === "android") setShowDatePicker(false);
-    if (selectedDate) setFecha(selectedDate);
+    if (selectedDate) {
+      setFecha(new Date(selectedDate.getUTCFullYear(), selectedDate.getUTCMonth(), selectedDate.getUTCDate()));
+    }
   };
 
   const canSubmit = tecnico.trim() && descripcion.trim();
@@ -111,7 +114,7 @@ export default function EditMantenimientoModal({
     setLoading(true);
     try {
       await onSubmit({
-        fecha_realizacion: fecha.toISOString(),
+        fecha_realizacion: toLocalISOString(fecha),
         tecnico_responsable: tecnico.trim(),
         descripcion: descripcion.trim(),
         costo_total: parseCurrency(costoTotal),

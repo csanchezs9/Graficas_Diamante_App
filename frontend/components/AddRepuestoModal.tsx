@@ -16,6 +16,7 @@ import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import DatePicker from "./DatePicker";
 import { Mantenimiento } from "../types/mantenimiento";
 import { formatCurrency, parseCurrency } from "../utils/currency";
+import { parseDate, toLocalISOString } from "../utils/date";
 
 interface Props {
   visible: boolean;
@@ -98,7 +99,9 @@ export default function AddRepuestoModal({
 
   const onDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === "android") setShowDatePicker(false);
-    if (selectedDate) setFecha(selectedDate);
+    if (selectedDate) {
+      setFecha(new Date(selectedDate.getUTCFullYear(), selectedDate.getUTCMonth(), selectedDate.getUTCDate()));
+    }
   };
 
   const selectedMant = mantenimientos.find((m) => m.id === mantenimientoId);
@@ -117,7 +120,7 @@ export default function AddRepuestoModal({
         cantidad_disponible: Math.max(0, parseInt(cantidad) || 0),
         costo_unitario: Math.max(0, parseCurrency(costoUnitario)),
         proveedor: proveedor.trim(),
-        fecha: fecha.toISOString(),
+        fecha: toLocalISOString(fecha),
         imagen_uri: imagenUri,
       });
       onClose();
@@ -275,7 +278,7 @@ export default function AddRepuestoModal({
 
                       return filtered.map((m, idx) => {
                         const machineName = m.maquinas?.nombre || "—";
-                        const fechaStr = new Date(m.fecha_realizacion).toLocaleDateString("es-CO", {
+                        const fechaStr = (parseDate(m.fecha_realizacion) ?? new Date()).toLocaleDateString("es-CO", {
                           day: "numeric",
                           month: "short",
                           year: "numeric",

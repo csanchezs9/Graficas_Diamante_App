@@ -18,6 +18,7 @@ import EditMaquinaModal from "../../components/EditMaquinaModal";
 import AddMantenimientoModal from "../../components/AddMantenimientoModal";
 import LinkedItemCard from "../../components/LinkedItemCard";
 import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
+import { parseDate } from "../../utils/date";
 import { useToast } from "../../context/ToastContext";
 import { DetailSkeleton } from "../../components/Skeleton";
 
@@ -372,7 +373,7 @@ export default function MaquinaDetailScreen() {
               label="Última Inspección"
               value={
                 maquina.fecha_ultima_inspeccion
-                  ? new Date(maquina.fecha_ultima_inspeccion).toLocaleDateString(
+                  ? (parseDate(maquina.fecha_ultima_inspeccion) ?? new Date()).toLocaleDateString(
                       "es-CO",
                       { year: "numeric", month: "long", day: "numeric" }
                     )
@@ -384,7 +385,7 @@ export default function MaquinaDetailScreen() {
               label="Fecha de Registro"
               value={
                 maquina.created_at
-                  ? new Date(maquina.created_at).toLocaleDateString("es-CO", {
+                  ? (parseDate(maquina.created_at) ?? new Date()).toLocaleDateString("es-CO", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
@@ -431,7 +432,7 @@ export default function MaquinaDetailScreen() {
                 {mantenimientos.map((m) => {
                   const tc = tipoConfig[m.tipo] || tipoConfig.preventivo;
                   const foto = m.fotos_urls?.[0] || null;
-                  const fechaStr = new Date(m.fecha_realizacion).toLocaleDateString("es-CO", {
+                  const fechaStr = (parseDate(m.fecha_realizacion) ?? new Date()).toLocaleDateString("es-CO", {
                     day: "numeric",
                     month: "short",
                     year: "numeric",

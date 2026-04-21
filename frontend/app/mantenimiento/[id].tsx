@@ -18,6 +18,7 @@ import EditMantenimientoModal from "../../components/EditMantenimientoModal";
 import LinkedItemCard from "../../components/LinkedItemCard";
 import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
 import { useToast } from "../../context/ToastContext";
+import { parseDate } from "../../utils/date";
 import { DetailSkeleton } from "../../components/Skeleton";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -293,7 +294,7 @@ export default function MantenimientoDetailScreen() {
               icon="calendar"
               label="Fecha de Realización"
               value={
-                new Date(mantenimiento.fecha_realizacion).toLocaleDateString(
+                (parseDate(mantenimiento.fecha_realizacion) ?? new Date()).toLocaleDateString(
                   "es-CO",
                   { year: "numeric", month: "long", day: "numeric" }
                 )
@@ -313,7 +314,7 @@ export default function MantenimientoDetailScreen() {
               label="Registrado"
               value={
                 mantenimiento.created_at
-                  ? new Date(mantenimiento.created_at).toLocaleDateString(
+                  ? (parseDate(mantenimiento.created_at) ?? new Date()).toLocaleDateString(
                       "es-CO",
                       { year: "numeric", month: "long", day: "numeric" }
                     )

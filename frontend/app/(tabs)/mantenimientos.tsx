@@ -13,6 +13,7 @@ import { Feather } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import DatePicker from "../../components/DatePicker";
+import { parseDate } from "../../utils/date";
 import { api, resetWakeUp } from "../../services/api";
 import { Maquina } from "../../types/maquina";
 import { Mantenimiento } from "../../types/mantenimiento";
@@ -65,7 +66,9 @@ export default function MantenimientosScreen() {
 
   const onDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === "android") setShowDatePicker(false);
-    if (selectedDate) setFilterDate(selectedDate);
+    if (selectedDate) {
+      setFilterDate(new Date(selectedDate.getUTCFullYear(), selectedDate.getUTCMonth(), selectedDate.getUTCDate()));
+    }
   };
 
   const clearFilters = () => {
@@ -267,7 +270,7 @@ export default function MantenimientosScreen() {
             </Text>
           </View>
           <Text className="text-[#555] text-[11px] font-inter-regular">
-            {new Date(item.fecha_realizacion).toLocaleDateString("es-CO", {
+            {(parseDate(item.fecha_realizacion) ?? new Date()).toLocaleDateString("es-CO", {
               day: "numeric",
               month: "long",
               year: "numeric",

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { Mantenimiento } from "../../types/mantenimiento";
 import { Repuesto } from "../../types/repuesto";
 import AddRepuestoModal from "../../components/AddRepuestoModal";
 import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
+import DeletePasswordModal from "../../components/DeletePasswordModal";
 import { useToast } from "../../context/ToastContext";
 import { RepuestosListSkeleton } from "../../components/Skeleton";
 
@@ -36,6 +37,8 @@ export default function RepuestosScreen() {
   });
   const { showToast } = useToast();
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const pendingDeleteIdRef = useRef<string>("");
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -123,30 +126,25 @@ export default function RepuestosScreen() {
   };
 
   const handleDelete = (id: string) => {
-    setConfirm({
-      visible: true,
-      title: "Eliminar repuesto",
-      message: "¿Estás seguro de que deseas eliminarlo? Esta acción no se puede deshacer.",
-      icon: "trash-2",
-      actions: [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await api.deleteRepuesto(id);
-              closeConfirm();
-              setRepuestos((prev) => prev.filter((r) => r.id !== id));
-              showToast("success", "Repuesto eliminado correctamente");
-            } catch (err: any) {
-              closeConfirm();
-              showToast("error", err.message || "No se pudo eliminar");
-            }
-          },
-        },
-      ],
-    });
+    pendingDeleteIdRef.current = id;
+    setPasswordModalVisible(true);
+  };
+
+  const handleDeleteWithPin = async (pin: string) => {
+    const id = pendingDeleteIdRef.current;
+    try {
+      await api.deleteRepuesto(id, pin);
+      setPasswordModalVisible(false);
+      setRepuestos((prev) => prev.filter((r) => r.id !== id));
+      showToast("success", "Repuesto eliminado correctamente");
+    } catch (err: any) {
+      if (err.status === 401) {
+        throw err;
+      } else {
+        setPasswordModalVisible(false);
+        showToast("error", err.message || "No se pudo eliminar");
+      }
+    }
   };
 
   const renderItem = ({ item }: { item: Repuesto }) => {
@@ -368,6 +366,11 @@ export default function RepuestosScreen() {
         mantenimientos={mantenimientos}
         onClose={() => setModalVisible(false)}
         onSubmit={handleCreate}
+      />
+      <DeletePasswordModal
+        visible={passwordModalVisible}
+        onClose={() => setPasswordModalVisible(false)}
+        onSubmit={handleDeleteWithPin}
       />
       <ConfirmDialog
         visible={confirm.visible}

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { Maquina } from "../../types/maquina";
 import MaquinaCard from "../../components/MaquinaCard";
 import AddMaquinaModal from "../../components/AddMaquinaModal";
 import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
+import DeletePasswordModal from "../../components/DeletePasswordModal";
 import { useToast } from "../../context/ToastContext";
 import { useFocusEffect } from "expo-router";
 import { MaquinasListSkeleton } from "../../components/Skeleton";
@@ -29,6 +30,8 @@ export default function MaquinasScreen() {
     visible: false, title: "", message: "", actions: [],
   });
   const { showToast } = useToast();
+  const pendingDeleteRef = useRef<{ id: string; pin: string }>({ id: "", pin: "" });
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
 
   const fetchMaquinas = useCallback(async () => {
     try {
@@ -69,58 +72,52 @@ export default function MaquinasScreen() {
   const closeConfirm = () => setConfirm((prev) => ({ ...prev, visible: false }));
 
   const handleDelete = (id: string) => {
-    setConfirm({
-      visible: true,
-      title: "Eliminar máquina",
-      message: "¿Estás seguro de que deseas eliminarla? Esta acción no se puede deshacer.",
-      icon: "trash-2",
-      actions: [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await api.deleteMaquina(id);
-              closeConfirm();
-              setMaquinas((prev) => prev.filter((m) => m.id !== id));
-              showToast("success", "Máquina eliminada correctamente");
-            } catch (err: any) {
-              if (err.status === 409) {
-                // Reemplaza el contenido del diálogo con la opción de cascade
-                setConfirm({
-                  visible: true,
-                  title: "Tiene registros asociados",
-                  message: `${err.message}\n\n¿Deseas eliminar la máquina junto con todos sus mantenimientos y repuestos?`,
-                  icon: "alert-triangle",
-                  actions: [
-                    { text: "Cancelar", style: "cancel" },
-                    {
-                      text: "Eliminar todo",
-                      style: "destructive",
-                      onPress: async () => {
-                        try {
-                          await api.deleteMaquina(id, true);
-                          closeConfirm();
-                          setMaquinas((prev) => prev.filter((m) => m.id !== id));
-                          showToast("success", "Máquina y registros asociados eliminados");
-                        } catch (e: any) {
-                          closeConfirm();
-                          showToast("error", e.message || "No se pudo eliminar");
-                        }
-                      },
-                    },
-                  ],
-                });
-              } else {
-                closeConfirm();
-                showToast("error", err.message || "No se pudo eliminar la máquina");
-              }
-            }
-          },
-        },
-      ],
-    });
+    pendingDeleteRef.current = { id, pin: "" };
+    setPasswordModalVisible(true);
+  };
+
+  const handleDeleteWithPin = async (pin: string) => {
+    const { id } = pendingDeleteRef.current;
+    try {
+      await api.deleteMaquina(id, false, pin);
+      setPasswordModalVisible(false);
+      setMaquinas((prev) => prev.filter((m) => m.id !== id));
+      showToast("success", "Máquina eliminada correctamente");
+    } catch (err: any) {
+      if (err.status === 409) {
+        pendingDeleteRef.current.pin = pin;
+        setPasswordModalVisible(false);
+        setConfirm({
+          visible: true,
+          title: "Tiene registros asociados",
+          message: `${err.message}\n\n¿Deseas eliminar la máquina junto con todos sus mantenimientos y repuestos?`,
+          icon: "alert-triangle",
+          actions: [
+            { text: "Cancelar", style: "cancel" },
+            {
+              text: "Eliminar todo",
+              style: "destructive",
+              onPress: async () => {
+                try {
+                  await api.deleteMaquina(pendingDeleteRef.current.id, true, pendingDeleteRef.current.pin);
+                  closeConfirm();
+                  setMaquinas((prev) => prev.filter((m) => m.id !== pendingDeleteRef.current.id));
+                  showToast("success", "Máquina y registros asociados eliminados");
+                } catch (e: any) {
+                  closeConfirm();
+                  showToast("error", e.message || "No se pudo eliminar");
+                }
+              },
+            },
+          ],
+        });
+      } else if (err.status === 401) {
+        throw err;
+      } else {
+        setPasswordModalVisible(false);
+        showToast("error", err.message || "No se pudo eliminar la máquina");
+      }
+    }
   };
 
   const handleCreate = async (data: {
@@ -273,6 +270,11 @@ export default function MaquinasScreen() {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onSubmit={handleCreate}
+      />
+      <DeletePasswordModal
+        visible={passwordModalVisible}
+        onClose={() => setPasswordModalVisible(false)}
+        onSubmit={handleDeleteWithPin}
       />
       <ConfirmDialog
         visible={confirm.visible}

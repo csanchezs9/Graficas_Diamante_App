@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
+  TextInput,
   FlatList,
   Pressable,
   RefreshControl,
@@ -19,6 +20,7 @@ import { MaquinasListSkeleton } from "../../components/Skeleton";
 
 export default function MaquinasScreen() {
   const [maquinas, setMaquinas] = useState<Maquina[]>([]);
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -48,6 +50,16 @@ export default function MaquinasScreen() {
       fetchMaquinas();
     }, [fetchMaquinas])
   );
+
+  const filteredMaquinas = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    if (!q) return maquinas;
+    return maquinas.filter((m) =>
+      m.nombre.toLowerCase().includes(q) ||
+      (m.codigo || "").toLowerCase().includes(q) ||
+      (m.ubicacion || "").toLowerCase().includes(q)
+    );
+  }, [maquinas, search]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -168,6 +180,27 @@ export default function MaquinasScreen() {
         </Pressable>
       </View>
 
+      {/* Search bar */}
+      {!loading && !loadError && (
+        <View className="px-5 pb-3">
+          <View className="flex-row items-center bg-surface border border-border rounded-2xl px-4 gap-2.5">
+            <Feather name="search" size={16} color="#666" />
+            <TextInput
+              value={search}
+              onChangeText={setSearch}
+              placeholder="Buscar por nombre, código, ubicación..."
+              placeholderTextColor="#555"
+              className="flex-1 text-textPrimary text-[14px] font-inter-regular py-3.5"
+            />
+            {search.length > 0 && (
+              <Pressable onPress={() => setSearch("")}>
+                <Feather name="x" size={16} color="#666" />
+              </Pressable>
+            )}
+          </View>
+        </View>
+      )}
+
       {loading ? (
         <MaquinasListSkeleton />
       ) : loadError && maquinas.length === 0 ? (
@@ -191,7 +224,7 @@ export default function MaquinasScreen() {
         </View>
       ) : (
       <FlatList
-        data={maquinas}
+        data={filteredMaquinas}
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={{ gap: 4 }}
@@ -212,23 +245,25 @@ export default function MaquinasScreen() {
         ListEmptyComponent={
           <View className="items-center justify-center pt-20">
             <View className="w-20 h-20 rounded-full bg-surface items-center justify-center mb-5">
-              <Feather name="settings" size={36} color="#2A2A2A" />
+              <Feather name={search ? "search" : "settings"} size={36} color="#2A2A2A" />
             </View>
             <Text className="text-textSecondary text-base font-inter-medium mb-1.5">
-              No hay máquinas registradas
+              {search ? "Sin resultados" : "No hay máquinas registradas"}
             </Text>
-            <Text className="text-[#555] text-sm font-inter-regular mb-6">
-              Agrega tu primera máquina para empezar
+            <Text className="text-[#555] text-sm font-inter-regular mb-6 text-center px-4">
+              {search ? `No se encontró ninguna máquina con "${search}"` : "Agrega tu primera máquina para empezar"}
             </Text>
-            <Pressable
-              onPress={() => setModalVisible(true)}
-              className="flex-row items-center gap-2 bg-surface border border-border px-5 py-3 rounded-2xl active:scale-[0.98]"
-            >
-              <Feather name="plus" size={16} color="#3B82F6" />
-              <Text className="text-accent text-sm font-inter-medium">
-                Agregar máquina
-              </Text>
-            </Pressable>
+            {!search && (
+              <Pressable
+                onPress={() => setModalVisible(true)}
+                className="flex-row items-center gap-2 bg-surface border border-border px-5 py-3 rounded-2xl active:scale-[0.98]"
+              >
+                <Feather name="plus" size={16} color="#3B82F6" />
+                <Text className="text-accent text-sm font-inter-medium">
+                  Agregar máquina
+                </Text>
+              </Pressable>
+            )}
           </View>
         }
       />

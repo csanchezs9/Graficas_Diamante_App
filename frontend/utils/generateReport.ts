@@ -239,7 +239,9 @@ export async function generateRepuestasPDF(repuestos: Repuesto[]): Promise<void>
     .filter((r) => r != null && r.nombre && r.nombre.trim() !== "")
     .sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-  const rows = sorted
+  const headerRow = `<tr style="background:#f0f4ff"><td style="padding:7px 8px;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.5px;width:32px;">#</td><td style="padding:7px 8px;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.5px;">Nombre</td><td style="padding:7px 8px;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.5px;">Código</td><td style="padding:7px 8px;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.5px;text-align:center;">Cantidad</td></tr>`;
+
+  const dataRows = sorted
     .map((r, i) => `<tr style="background:${i % 2 === 0 ? "#fff" : "#f9f9f9"}"><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#888;font-size:10px;">${i + 1}</td><td style="padding:5px 8px;border-bottom:1px solid #eee;">${escapeHtml(r.nombre)}</td><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#555;">${escapeHtml(r.codigo || "—")}</td><td style="padding:5px 8px;border-bottom:1px solid #eee;text-align:center;font-weight:600;">${r.cantidad_disponible}</td></tr>`)
     .join("");
 
@@ -259,9 +261,6 @@ export async function generateRepuestasPDF(repuestos: Repuesto[]): Promise<void>
       .summary-card .value { font-size: 18px; font-weight: 700; color: #1a1a1a; }
       .summary-card .label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
       table { width: 100%; border-collapse: collapse; font-size: 11px; }
-      th { background: #f0f4ff; padding: 7px 8px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
-      th:last-child { text-align: center; }
-      tbody tr:last-child td { border-bottom: none; }
       .footer { text-align: center; color: #ccc; font-size: 9px; margin-top: 24px; border-top: 1px solid #eee; padding-top: 10px; }
     </style>
   </head>
@@ -282,7 +281,7 @@ export async function generateRepuestasPDF(repuestos: Repuesto[]): Promise<void>
       </div>
     </div>
 
-    <table><thead><tr><th style="width:32px;">#</th><th>Nombre</th><th>Código</th><th style="text-align:center;">Cantidad</th></tr></thead><tbody>${rows}</tbody></table>
+    <table>${headerRow}${dataRows}</table>
 
     <div class="footer">Graficas Diamante App · Inventario generado automaticamente</div>
   </body>

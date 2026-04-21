@@ -235,7 +235,9 @@ export async function generateRepuestasPDF(repuestos: Repuesto[]): Promise<void>
 
   const totalUnidades = repuestos.reduce((s, r) => s + (r.cantidad_disponible || 0), 0);
 
-  const sorted = [...repuestos].sort((a, b) => a.nombre.localeCompare(b.nombre));
+  const sorted = repuestos
+    .filter((r) => r != null && r.nombre && r.nombre.trim() !== "")
+    .sort((a, b) => a.nombre.localeCompare(b.nombre));
 
   const rows = sorted
     .map((r, i) => `<tr style="background:${i % 2 === 0 ? "#fff" : "#f9f9f9"}"><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#888;font-size:10px;">${i + 1}</td><td style="padding:5px 8px;border-bottom:1px solid #eee;">${escapeHtml(r.nombre)}</td><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#555;">${escapeHtml(r.codigo || "—")}</td><td style="padding:5px 8px;border-bottom:1px solid #eee;text-align:center;font-weight:600;">${r.cantidad_disponible}</td></tr>`)
@@ -271,7 +273,7 @@ export async function generateRepuestasPDF(repuestos: Repuesto[]): Promise<void>
 
     <div class="summary">
       <div class="summary-card">
-        <div class="value">${repuestos.length}</div>
+        <div class="value">${sorted.length}</div>
         <div class="label">Repuestos</div>
       </div>
       <div class="summary-card">

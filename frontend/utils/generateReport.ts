@@ -259,6 +259,7 @@ export async function generateRepuestasPDF(repuestos: Repuesto[]): Promise<void>
       table { width: 100%; border-collapse: collapse; font-size: 11px; }
       th { background: #f0f4ff; padding: 7px 8px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
       th:last-child { text-align: center; }
+      tbody tr:last-child td { border-bottom: none; }
       .footer { text-align: center; color: #ccc; font-size: 9px; margin-top: 24px; border-top: 1px solid #eee; padding-top: 10px; }
     </style>
   </head>

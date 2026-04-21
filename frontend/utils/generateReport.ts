@@ -242,7 +242,10 @@ export async function generateRepuestasPDF(repuestos: Repuesto[]): Promise<void>
   const headerRow = `<tr style="background:#f0f4ff"><td style="padding:7px 8px;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.5px;width:32px;">#</td><td style="padding:7px 8px;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.5px;">Nombre</td><td style="padding:7px 8px;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.5px;">Código</td><td style="padding:7px 8px;font-size:10px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.5px;text-align:center;">Cantidad</td></tr>`;
 
   const dataRows = sorted
-    .map((r, i) => `<tr style="background:${i % 2 === 0 ? "#fff" : "#f9f9f9"}"><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#888;font-size:10px;">${i + 1}</td><td style="padding:5px 8px;border-bottom:1px solid #eee;">${escapeHtml(r.nombre)}</td><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#555;">${escapeHtml(r.codigo || "—")}</td><td style="padding:5px 8px;border-bottom:1px solid #eee;text-align:center;font-weight:600;">${r.cantidad_disponible}</td></tr>`)
+    .map((r, i) => {
+      const border = i < sorted.length - 1 ? "border-bottom:1px solid #eee;" : "";
+      return `<tr style="background:${i % 2 === 0 ? "#fff" : "#f9f9f9"}"><td style="padding:5px 8px;${border}color:#888;font-size:10px;">${i + 1}</td><td style="padding:5px 8px;${border}">${escapeHtml(r.nombre)}</td><td style="padding:5px 8px;${border}color:#555;">${escapeHtml(r.codigo || "—")}</td><td style="padding:5px 8px;${border}text-align:center;font-weight:600;">${r.cantidad_disponible}</td></tr>`;
+    })
     .join("");
 
   const html = `

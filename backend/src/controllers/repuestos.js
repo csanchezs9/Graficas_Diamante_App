@@ -6,7 +6,7 @@ const getById = async (req, res) => {
 
   const { data, error } = await supabase
     .from('repuestos')
-    .select('*, mantenimientos(descripcion, maquina_id, maquinas(nombre))')
+    .select('*, mantenimientos!mantenimiento_id(descripcion, maquina_id, maquinas(nombre))')
     .eq('id', id)
     .single();
 
@@ -32,7 +32,7 @@ const getAll = async (req, res) => {
 
     const { data, error } = await supabase
       .from('repuestos')
-      .select('*, mantenimientos(descripcion, maquina_id, maquinas(nombre))')
+      .select('*, mantenimientos!mantenimiento_id(descripcion, maquina_id, maquinas(nombre))')
       .in('id', ids)
       .order('created_at', { ascending: false });
 
@@ -42,7 +42,7 @@ const getAll = async (req, res) => {
 
   const { data, error } = await supabase
     .from('repuestos')
-    .select('*, mantenimientos(descripcion, maquina_id, maquinas(nombre))')
+    .select('*, mantenimientos!mantenimiento_id(descripcion, maquina_id, maquinas(nombre))')
     .order('created_at', { ascending: false });
 
   if (error) return res.status(getHttpStatus(error)).json({ error: error.message });
@@ -95,7 +95,7 @@ const create = async (req, res) => {
       fecha,
       imagen_url,
     })
-    .select('*, mantenimientos(descripcion, maquina_id, maquinas(nombre))')
+    .select('*, mantenimientos!mantenimiento_id(descripcion, maquina_id, maquinas(nombre))')
     .single();
 
   if (error) return res.status(getHttpStatus(error)).json({ error: error.message });
@@ -152,7 +152,7 @@ const update = async (req, res) => {
       ...(imagen_url !== undefined && { imagen_url }),
     })
     .eq('id', id)
-    .select('*, mantenimientos(descripcion, maquina_id, maquinas(nombre))')
+    .select('*, mantenimientos!mantenimiento_id(descripcion, maquina_id, maquinas(nombre))')
     .single();
 
   if (error) return res.status(getHttpStatus(error)).json({ error: error.message });

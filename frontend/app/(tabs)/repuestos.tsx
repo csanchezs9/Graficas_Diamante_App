@@ -6,10 +6,12 @@ import {
   Pressable,
   RefreshControl,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { api, resetWakeUp } from "../../services/api";
+import { generateRepuestasPDF } from "../../utils/generateReport";
 import { Mantenimiento } from "../../types/mantenimiento";
 import { Repuesto } from "../../types/repuesto";
 import AddRepuestoModal from "../../components/AddRepuestoModal";
@@ -33,7 +35,7 @@ export default function RepuestosScreen() {
     visible: false, title: "", message: "", actions: [],
   });
   const { showToast } = useToast();
-
+  const [generatingPdf, setGeneratingPdf] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -108,6 +110,17 @@ export default function RepuestosScreen() {
   };
 
   const closeConfirm = () => setConfirm((prev) => ({ ...prev, visible: false }));
+
+  const handleGeneratePDF = async () => {
+    setGeneratingPdf(true);
+    try {
+      await generateRepuestasPDF(repuestos);
+    } catch {
+      showToast("error", "No se pudo generar el reporte");
+    } finally {
+      setGeneratingPdf(false);
+    }
+  };
 
   const handleDelete = (id: string) => {
     setConfirm({
@@ -253,14 +266,39 @@ export default function RepuestosScreen() {
             {loading ? " " : `${repuestos.length} repuesto${repuestos.length !== 1 ? "s" : ""}`}
           </Text>
         </View>
-        <Pressable
-          onPress={() => setModalVisible(true)}
-          accessibilityRole="button"
-          accessibilityLabel="Agregar repuesto"
-          className="bg-accent w-[46px] h-[46px] rounded-2xl items-center justify-center active:scale-[0.98]"
-        >
-          <Feather name="plus" size={22} color="white" />
-        </Pressable>
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <Pressable
+            onPress={handleGeneratePDF}
+            disabled={generatingPdf || loading || repuestos.length === 0}
+            accessibilityRole="button"
+            accessibilityLabel="Generar PDF"
+            style={{
+              width: 46,
+              height: 46,
+              borderRadius: 14,
+              backgroundColor: "#1A1A1A",
+              borderWidth: 1,
+              borderColor: "#2A2A2A",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: generatingPdf || repuestos.length === 0 ? 0.5 : 1,
+            }}
+          >
+            {generatingPdf ? (
+              <ActivityIndicator size="small" color="#3B82F6" />
+            ) : (
+              <Feather name="file-text" size={20} color="#3B82F6" />
+            )}
+          </Pressable>
+          <Pressable
+            onPress={() => setModalVisible(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Agregar repuesto"
+            className="bg-accent w-[46px] h-[46px] rounded-2xl items-center justify-center active:scale-[0.98]"
+          >
+            <Feather name="plus" size={22} color="white" />
+          </Pressable>
+        </View>
       </View>
 
       {loading ? (

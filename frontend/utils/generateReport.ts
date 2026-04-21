@@ -194,6 +194,10 @@ export async function generatePDFReport(
   </body>
   </html>`;
 
+  await printOrShare(html);
+}
+
+async function printOrShare(html: string): Promise<void> {
   if (Platform.OS === "web") {
     const iframe = document.createElement("iframe");
     iframe.style.position = "fixed";
@@ -220,4 +224,76 @@ export async function generatePDFReport(
       UTI: "com.adobe.pdf",
     });
   }
+}
+
+export async function generateRepuestasPDF(repuestos: Repuesto[]): Promise<void> {
+  const today = new Date().toLocaleDateString("es-CO", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const totalUnidades = repuestos.reduce((s, r) => s + (r.cantidad_disponible || 0), 0);
+
+  const sorted = [...repuestos].sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+  const rows = sorted
+    .map((r, i) => `<tr style="background:${i % 2 === 0 ? "#fff" : "#f9f9f9"}"><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#888;font-size:10px;">${i + 1}</td><td style="padding:5px 8px;border-bottom:1px solid #eee;">${escapeHtml(r.nombre)}</td><td style="padding:5px 8px;border-bottom:1px solid #eee;color:#555;">${escapeHtml(r.codigo || "—")}</td><td style="padding:5px 8px;border-bottom:1px solid #eee;text-align:center;font-weight:600;">${r.cantidad_disponible}</td></tr>`)
+    .join("");
+
+  const html = `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      * { box-sizing: border-box; }
+      body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #1a1a1a; padding: 24px; margin: 0; font-size: 12px; }
+      .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #3B82F6; padding-bottom: 14px; }
+      .header h1 { margin: 0; font-size: 20px; color: #1a1a1a; }
+      .header p { margin: 4px 0 0; color: #888; font-size: 11px; }
+      .summary { display: flex; gap: 12px; margin-bottom: 20px; }
+      .summary-card { flex: 1; background: #f8f9fa; border-radius: 8px; padding: 12px; text-align: center; }
+      .summary-card .value { font-size: 18px; font-weight: 700; color: #1a1a1a; }
+      .summary-card .label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+      table { width: 100%; border-collapse: collapse; font-size: 11px; }
+      th { background: #f0f4ff; padding: 7px 8px; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
+      th:last-child { text-align: center; }
+      .footer { text-align: center; color: #ccc; font-size: 9px; margin-top: 24px; border-top: 1px solid #eee; padding-top: 10px; }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Inventario de Repuestos</h1>
+      <p>Graficas Diamante · Generado el ${today}</p>
+    </div>
+
+    <div class="summary">
+      <div class="summary-card">
+        <div class="value">${repuestos.length}</div>
+        <div class="label">Repuestos</div>
+      </div>
+      <div class="summary-card">
+        <div class="value">${totalUnidades}</div>
+        <div class="label">Unidades totales</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width:32px;">#</th>
+          <th>Nombre</th>
+          <th>Código</th>
+          <th style="text-align:center;">Cantidad</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+
+    <div class="footer">Graficas Diamante App · Inventario generado automaticamente</div>
+  </body>
+  </html>`;
+
+  await printOrShare(html);
 }

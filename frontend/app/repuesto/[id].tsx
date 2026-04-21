@@ -15,6 +15,7 @@ import { Repuesto } from "../../types/repuesto";
 import { api } from "../../services/api";
 import EditRepuestoModal from "../../components/EditRepuestoModal";
 import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
+import DeletePasswordModal from "../../components/DeletePasswordModal";
 import { useToast } from "../../context/ToastContext";
 import { parseDate } from "../../utils/date";
 import { DetailSkeleton } from "../../components/Skeleton";
@@ -38,6 +39,7 @@ export default function RepuestoDetailScreen() {
     visible: false, title: "", message: "", actions: [],
   });
   const { showToast } = useToast();
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -63,30 +65,23 @@ export default function RepuestoDetailScreen() {
 
   const handleDelete = () => {
     if (!repuesto) return;
-    setConfirm({
-      visible: true,
-      title: "Eliminar repuesto",
-      message: "¿Estás seguro de que deseas eliminarlo? Esta acción no se puede deshacer.",
-      icon: "trash-2",
-      actions: [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await api.deleteRepuesto(repuesto.id);
-              closeConfirm();
-              showToast("success", "Repuesto eliminado");
-              router.back();
-            } catch (err: any) {
-              closeConfirm();
-              showToast("error", err.message || "No se pudo eliminar");
-            }
-          },
-        },
-      ],
-    });
+    setPasswordModalVisible(true);
+  };
+
+  const handleDeleteWithPin = async (pin: string) => {
+    try {
+      await api.deleteRepuesto(repuesto!.id, pin);
+      setPasswordModalVisible(false);
+      showToast("success", "Repuesto eliminado");
+      router.back();
+    } catch (err: any) {
+      if (err.status === 401) {
+        throw err;
+      } else {
+        setPasswordModalVisible(false);
+        showToast("error", err.message || "No se pudo eliminar");
+      }
+    }
   };
 
   const handleEdit = async (editData: {
@@ -382,6 +377,11 @@ export default function RepuestoDetailScreen() {
           onSubmit={handleEdit}
         />
       )}
+      <DeletePasswordModal
+        visible={passwordModalVisible}
+        onClose={() => setPasswordModalVisible(false)}
+        onSubmit={handleDeleteWithPin}
+      />
       <ConfirmDialog
         visible={confirm.visible}
         title={confirm.title}

@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import EditMaquinaModal from "../../components/EditMaquinaModal";
 import AddMantenimientoModal from "../../components/AddMantenimientoModal";
 import LinkedItemCard from "../../components/LinkedItemCard";
 import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
+import DeletePasswordModal from "../../components/DeletePasswordModal";
 import { parseDate } from "../../utils/date";
 import { useToast } from "../../context/ToastContext";
 import { DetailSkeleton } from "../../components/Skeleton";
@@ -48,6 +49,8 @@ export default function MaquinaDetailScreen() {
     visible: false, title: "", message: "", actions: [],
   });
   const { showToast } = useToast();
+  const pendingPinRef = useRef<string>("");
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -176,57 +179,50 @@ export default function MaquinaDetailScreen() {
 
   const handleDelete = () => {
     if (!maquina) return;
-    setConfirm({
-      visible: true,
-      title: "Eliminar máquina",
-      message: "¿Estás seguro de que deseas eliminarla? Esta acción no se puede deshacer.",
-      icon: "trash-2",
-      actions: [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await api.deleteMaquina(maquina.id);
-              closeConfirm();
-              showToast("success", "Máquina eliminada");
-              router.back();
-            } catch (err: any) {
-              if (err.status === 409) {
-                setConfirm({
-                  visible: true,
-                  title: "Tiene registros asociados",
-                  message: `${err.message}\n\n¿Deseas eliminar la máquina junto con todos sus mantenimientos y repuestos?`,
-                  icon: "alert-triangle",
-                  actions: [
-                    { text: "Cancelar", style: "cancel" },
-                    {
-                      text: "Eliminar todo",
-                      style: "destructive",
-                      onPress: async () => {
-                        try {
-                          await api.deleteMaquina(maquina.id, true);
-                          closeConfirm();
-                          showToast("success", "Máquina y registros eliminados");
-                          router.back();
-                        } catch (e: any) {
-                          closeConfirm();
-                          showToast("error", e.message || "No se pudo eliminar");
-                        }
-                      },
-                    },
-                  ],
-                });
-              } else {
-                closeConfirm();
-                showToast("error", err.message || "No se pudo eliminar");
-              }
-            }
-          },
-        },
-      ],
-    });
+    setPasswordModalVisible(true);
+  };
+
+  const handleDeleteWithPin = async (pin: string) => {
+    try {
+      await api.deleteMaquina(maquina!.id, false, pin);
+      setPasswordModalVisible(false);
+      showToast("success", "Máquina eliminada");
+      router.back();
+    } catch (err: any) {
+      if (err.status === 409) {
+        pendingPinRef.current = pin;
+        setPasswordModalVisible(false);
+        setConfirm({
+          visible: true,
+          title: "Tiene registros asociados",
+          message: `${err.message}\n\n¿Deseas eliminar la máquina junto con todos sus mantenimientos y repuestos?`,
+          icon: "alert-triangle",
+          actions: [
+            { text: "Cancelar", style: "cancel" },
+            {
+              text: "Eliminar todo",
+              style: "destructive",
+              onPress: async () => {
+                try {
+                  await api.deleteMaquina(maquina!.id, true, pendingPinRef.current);
+                  closeConfirm();
+                  showToast("success", "Máquina y registros eliminados");
+                  router.back();
+                } catch (e: any) {
+                  closeConfirm();
+                  showToast("error", e.message || "No se pudo eliminar");
+                }
+              },
+            },
+          ],
+        });
+      } else if (err.status === 401) {
+        throw err;
+      } else {
+        setPasswordModalVisible(false);
+        showToast("error", err.message || "No se pudo eliminar");
+      }
+    }
   };
 
   if (loading) {
@@ -544,6 +540,11 @@ export default function MaquinaDetailScreen() {
         defaultMaquinaId={maquina?.id}
         onClose={() => setAddMantenimientoVisible(false)}
         onSubmit={handleCreateMantenimiento}
+      />
+      <DeletePasswordModal
+        visible={passwordModalVisible}
+        onClose={() => setPasswordModalVisible(false)}
+        onSubmit={handleDeleteWithPin}
       />
       <ConfirmDialog
         visible={confirm.visible}

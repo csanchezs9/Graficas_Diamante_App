@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const healthRoutes = require('./routes/health');
 const maquinasRoutes = require('./routes/maquinas');
@@ -15,12 +16,21 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Routes
+// API Routes (must come before static files)
 app.use('/api/health', healthRoutes);
 app.use('/api/maquinas', maquinasRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/mantenimientos', mantenimientosRoutes);
 app.use('/api/repuestos', repuestosRoutes);
+
+// Serve frontend web build (from frontend/dist)
+const webDir = path.join(__dirname, '../../frontend/dist');
+app.use(express.static(webDir));
+
+// All non-API routes → index.html (SPA client-side routing)
+app.get('*path', (req, res) => {
+  res.sendFile(path.join(webDir, 'index.html'));
+});
 
 // Prevent crashes from killing the keep-alive
 process.on('unhandledRejection', (err) => {

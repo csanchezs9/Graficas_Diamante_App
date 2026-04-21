@@ -3,7 +3,11 @@ import { Maquina } from "../types/maquina";
 import { Mantenimiento } from "../types/mantenimiento";
 import { Repuesto } from "../types/repuesto";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api";
+// On web served from same Express: use relative "/api"
+// On mobile (native): use env var or fallback to localhost for dev
+const API_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  (Platform.OS === "web" ? "/api" : "http://localhost:3000/api");
 
 const TIMEOUT_MS = 30000; // 30s for normal requests (server already awake)
 const WAKE_POLL_INTERVAL = 3000; // Poll every 3s during cold start
@@ -100,11 +104,13 @@ export const api = {
     return res.json();
   },
 
-  async deleteMaquina(id: string, cascade: boolean = false): Promise<void> {
+  async deleteMaquina(id: string, cascade: boolean = false, password?: string): Promise<void> {
     const url = cascade
       ? `${API_URL}/maquinas/${id}?cascade=true`
       : `${API_URL}/maquinas/${id}`;
-    const res = await fetchWithTimeout(url, { method: "DELETE" });
+    const headers: Record<string, string> = {};
+    if (password) headers["x-delete-password"] = password;
+    const res = await fetchWithTimeout(url, { method: "DELETE", headers });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
       const err: any = new Error(body?.error || "Error al eliminar máquina");
@@ -185,11 +191,13 @@ export const api = {
     return res.json();
   },
 
-  async deleteMantenimiento(id: string, cascade: boolean = false): Promise<void> {
+  async deleteMantenimiento(id: string, cascade: boolean = false, password?: string): Promise<void> {
     const url = cascade
       ? `${API_URL}/mantenimientos/${id}?cascade=true`
       : `${API_URL}/mantenimientos/${id}`;
-    const res = await fetchWithTimeout(url, { method: "DELETE" });
+    const headers: Record<string, string> = {};
+    if (password) headers["x-delete-password"] = password;
+    const res = await fetchWithTimeout(url, { method: "DELETE", headers });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
       const err: any = new Error(body?.error || "Error al eliminar mantenimiento");
@@ -235,13 +243,18 @@ export const api = {
     return res.json();
   },
 
-  async deleteRepuesto(id: string): Promise<void> {
+  async deleteRepuesto(id: string, password?: string): Promise<void> {
+    const headers: Record<string, string> = {};
+    if (password) headers["x-delete-password"] = password;
     const res = await fetchWithTimeout(`${API_URL}/repuestos/${id}`, {
       method: "DELETE",
+      headers,
     });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
-      throw new Error(body?.error || "Error al eliminar repuesto");
+      const err: any = new Error(body?.error || "Error al eliminar repuesto");
+      err.status = res.status;
+      throw err;
     }
   },
 

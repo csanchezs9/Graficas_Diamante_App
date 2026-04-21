@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import { api } from "../../services/api";
 import EditMantenimientoModal from "../../components/EditMantenimientoModal";
 import LinkedItemCard from "../../components/LinkedItemCard";
 import ConfirmDialog, { ConfirmDialogAction } from "../../components/ConfirmDialog";
+import DeletePasswordModal from "../../components/DeletePasswordModal";
 import { useToast } from "../../context/ToastContext";
 import { parseDate } from "../../utils/date";
 import { DetailSkeleton } from "../../components/Skeleton";
@@ -41,6 +42,8 @@ export default function MantenimientoDetailScreen() {
     visible: false, title: "", message: "", actions: [],
   });
   const { showToast } = useToast();
+  const pendingPinRef = useRef<string>("");
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -75,57 +78,50 @@ export default function MantenimientoDetailScreen() {
 
   const handleDelete = () => {
     if (!mantenimiento) return;
-    setConfirm({
-      visible: true,
-      title: "Eliminar mantenimiento",
-      message: "¿Estás seguro de que deseas eliminarlo? Esta acción no se puede deshacer.",
-      icon: "trash-2",
-      actions: [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await api.deleteMantenimiento(mantenimiento.id);
-              closeConfirm();
-              showToast("success", "Mantenimiento eliminado");
-              router.back();
-            } catch (err: any) {
-              if (err.status === 409) {
-                setConfirm({
-                  visible: true,
-                  title: "Tiene registros asociados",
-                  message: `${err.message}\n\n¿Deseas eliminar el mantenimiento junto con todos sus repuestos?`,
-                  icon: "alert-triangle",
-                  actions: [
-                    { text: "Cancelar", style: "cancel" },
-                    {
-                      text: "Eliminar todo",
-                      style: "destructive",
-                      onPress: async () => {
-                        try {
-                          await api.deleteMantenimiento(mantenimiento.id, true);
-                          closeConfirm();
-                          showToast("success", "Mantenimiento y repuestos eliminados");
-                          router.back();
-                        } catch (e: any) {
-                          closeConfirm();
-                          showToast("error", e.message || "No se pudo eliminar");
-                        }
-                      },
-                    },
-                  ],
-                });
-              } else {
-                closeConfirm();
-                showToast("error", err.message || "No se pudo eliminar");
-              }
-            }
-          },
-        },
-      ],
-    });
+    setPasswordModalVisible(true);
+  };
+
+  const handleDeleteWithPin = async (pin: string) => {
+    try {
+      await api.deleteMantenimiento(mantenimiento!.id, false, pin);
+      setPasswordModalVisible(false);
+      showToast("success", "Mantenimiento eliminado");
+      router.back();
+    } catch (err: any) {
+      if (err.status === 409) {
+        pendingPinRef.current = pin;
+        setPasswordModalVisible(false);
+        setConfirm({
+          visible: true,
+          title: "Tiene registros asociados",
+          message: `${err.message}\n\n¿Deseas eliminar el mantenimiento junto con todos sus repuestos?`,
+          icon: "alert-triangle",
+          actions: [
+            { text: "Cancelar", style: "cancel" },
+            {
+              text: "Eliminar todo",
+              style: "destructive",
+              onPress: async () => {
+                try {
+                  await api.deleteMantenimiento(mantenimiento!.id, true, pendingPinRef.current);
+                  closeConfirm();
+                  showToast("success", "Mantenimiento y repuestos eliminados");
+                  router.back();
+                } catch (e: any) {
+                  closeConfirm();
+                  showToast("error", e.message || "No se pudo eliminar");
+                }
+              },
+            },
+          ],
+        });
+      } else if (err.status === 401) {
+        throw err;
+      } else {
+        setPasswordModalVisible(false);
+        showToast("error", err.message || "No se pudo eliminar");
+      }
+    }
   };
 
   const handleEdit = async (editData: {
@@ -473,6 +469,11 @@ export default function MantenimientoDetailScreen() {
           onSubmit={handleEdit}
         />
       )}
+      <DeletePasswordModal
+        visible={passwordModalVisible}
+        onClose={() => setPasswordModalVisible(false)}
+        onSubmit={handleDeleteWithPin}
+      />
       <ConfirmDialog
         visible={confirm.visible}
         title={confirm.title}
